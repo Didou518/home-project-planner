@@ -1,0 +1,36 @@
+.loginForm {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1rem;
+}
+
+.loginForm__title {
+	font-size: var(--text-2xl);
+	font-weight: var(--font-weight-bold);
+	text-align: center;
+	margin-bottom: var(--space2);
+}
+
+.loginForm__description {
+	font-size: var(--text-sm);
+	font-weight: var(--font-weight-normal);
+	text-align: center;
+	color: var(--color-muted-foreground);
+	margin-bottom: var(--space4);
+}
+
+.loginForm__form {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: var(--space2);
+}
+
+.loginForm__inputGroup {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: var(--space2);
+}
+
+.loginForm__submit {
+	margin-top: var(--space4);
+}

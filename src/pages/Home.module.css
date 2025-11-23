@@ -1,0 +1,39 @@
+.home {
+	display: grid;
+	grid-template-columns: 1fr;
+	height: 100vh;
+}
+
+.home__left {
+	display: none;
+	background-color: var(--color-muted);
+}
+
+.home__right {
+	display: grid;
+	background-color: var(--color-background);
+	padding: 1rem;
+	grid-template-rows: auto 1fr;
+}
+
+.registerLink {
+	justify-self: end;
+}
+
+.loginForm {
+	justify-self: center;
+	align-self: center;
+	width: 100%;
+	max-width: 384px;
+}
+
+@media (min-width: 768px) {
+	.home {
+		grid-template-columns: 1fr 1fr;
+	}
+
+	.home__left {
+		display: grid;
+		place-items: center;
+	}
+}
