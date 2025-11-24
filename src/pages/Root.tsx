@@ -1,5 +1,6 @@
-import AppSidebar from '@/components/AppSidebar';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import AppSidebar from '@/components/sidebar/AppSidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { getProperties } from '@/integrations/supabase/client';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router';
@@ -19,10 +20,14 @@ export default function RootLayout() {
 			<SidebarProvider>
 				<AppSidebar />
 				<main>
-					<SidebarTrigger />
 					<Outlet />
 				</main>
 			</SidebarProvider>
 		</>
 	);
+}
+
+export async function loader() {
+	const properties = await getProperties();
+	return { properties };
 }

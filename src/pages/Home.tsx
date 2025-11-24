@@ -1,14 +1,21 @@
-import { Form } from 'react-router';
+import PageTemplate from '@/components/PageTemplate';
 import styles from './Home.module.css';
-import { Button } from '@/components/ui/button';
+import Breadcrumbs from '@/components/Breadcrumbs';
+import { type Crumb } from '@/components/Breadcrumbs';
+import Heading1 from '@/components/Heading1';
 
-export default function Home() {
+const breadcrumbs: Crumb[] = [{ label: 'Accueil', to: '/' }];
+
+export default function HomePage() {
 	return (
 		<>
-			<section className={styles.home}>
-				<h1 className="text-4xl font-bold">Home Project Planner</h1>
-				<p>Ha ci bo</p>
-			</section>
+			<Breadcrumbs crumbs={breadcrumbs} />
+			<PageTemplate>
+				<section className={styles.home}>
+					<Heading1>Home Project Planner</Heading1>
+					<p>Ha ci bo</p>
+				</section>
+			</PageTemplate>
 		</>
 	);
 }

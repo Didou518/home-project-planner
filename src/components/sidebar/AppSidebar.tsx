@@ -1,4 +1,4 @@
-import { Form, NavLink } from 'react-router';
+import { Form, NavLink, useRouteLoaderData } from 'react-router';
 import {
 	Sidebar,
 	SidebarContent,
@@ -10,14 +10,19 @@ import {
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
-} from './ui/sidebar';
-import { Button } from './ui/button';
-import { Folder, Home, LogOut } from 'lucide-react';
+} from '../ui/sidebar';
+import { Button } from '../ui/button';
+import { Folder, LayoutDashboard, LogOut } from 'lucide-react';
+import { usePropertyStore } from '@/stores/usePropertyStore';
+import { useEffect, useMemo } from 'react';
+import type { Property } from '@/types/Property';
+import PropertyMenu from './PropertyMenu';
+import ProjectMenu from './ProjectMenu';
 
 const menuItems = [
 	{
 		label: 'Dashboard',
-		icon: Home,
+		icon: LayoutDashboard,
 		to: '/',
 	},
 	{
@@ -28,6 +33,17 @@ const menuItems = [
 ];
 
 export default function AppSidebar() {
+	const { setProperties } = usePropertyStore();
+	const loaderData = useRouteLoaderData<{ properties: Property[] }>('root');
+	const properties = useMemo(
+		() => loaderData?.properties ?? [],
+		[loaderData]
+	);
+
+	useEffect(() => {
+		setProperties(properties);
+	}, [properties, setProperties]);
+
 	return (
 		<>
 			<Sidebar>
@@ -50,6 +66,8 @@ export default function AppSidebar() {
 							</SidebarMenu>
 						</SidebarGroupContent>
 					</SidebarGroup>
+					<PropertyMenu properties={properties} />
+					<ProjectMenu />
 				</SidebarContent>
 				<SidebarFooter>
 					<Form method="post" action="/logout">
