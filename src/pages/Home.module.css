@@ -16,17 +16,6 @@
 	grid-template-rows: auto 1fr;
 }
 
-.registerLink {
-	justify-self: end;
-}
-
-.loginForm {
-	justify-self: center;
-	align-self: center;
-	width: 100%;
-	max-width: 384px;
-}
-
 @media (min-width: 768px) {
 	.home {
 		grid-template-columns: 1fr 1fr;

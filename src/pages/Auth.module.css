@@ -1,0 +1,73 @@
+.auth {
+	display: grid;
+	grid-template-columns: 1fr;
+	height: 100vh;
+}
+
+.auth__left {
+	display: none;
+	background-color: var(--color-muted);
+}
+
+.auth__right {
+	display: grid;
+	background-color: var(--color-background);
+	padding: var(--space4);
+	align-items: center;
+}
+
+.authForm {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1rem;
+	justify-self: center;
+	max-width: 400px;
+}
+
+.authForm__title {
+	font-size: var(--text-2xl);
+	font-weight: var(--font-weight-bold);
+	text-align: center;
+	margin-bottom: var(--space2);
+}
+
+.authForm__description {
+	font-size: var(--text-sm);
+	font-weight: var(--font-weight-normal);
+	text-align: center;
+	color: var(--color-muted-foreground);
+	margin-bottom: var(--space4);
+}
+
+.authForm__form {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: var(--space2);
+}
+
+.authForm__inputGroup {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: var(--space2);
+}
+
+.authForm__submit {
+	margin-top: var(--space4);
+}
+
+.authForm__registerLink {
+	justify-self: center;
+}
+
+@media (min-width: 768px) {
+	.auth {
+		grid-template-columns: 1fr 1fr;
+	}
+
+	.auth__left {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+	}
+}

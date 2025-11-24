@@ -1,6 +1,6 @@
-import { NavLink } from 'react-router';
+import { Form } from 'react-router';
 import styles from './Home.module.css';
-import LoginForm from '@/components/LoginForm';
+import { Button } from '@/components/ui/button';
 
 export default function Home() {
 	return (
@@ -10,10 +10,10 @@ export default function Home() {
 					<h1 className="text-4xl font-bold">Home Project Planner</h1>
 				</div>
 				<div className={styles.home__right}>
-					<NavLink className={styles.registerLink} to="/register">Créer un compte</NavLink>
-					<section className={styles.loginForm}>
-						<LoginForm />
-					</section>
+					Ha ci bo
+					<Form method="post" action="/logout">
+						<Button type="submit">Logout</Button>
+					</Form>
 				</div>
 			</section>
 		</>
