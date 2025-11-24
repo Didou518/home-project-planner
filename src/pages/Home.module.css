@@ -4,25 +4,5 @@
 	height: 100vh;
 }
 
-.home__left {
-	display: none;
-	background-color: var(--color-muted);
-}
-
-.home__right {
-	display: grid;
-	background-color: var(--color-background);
-	padding: 1rem;
-	grid-template-rows: auto 1fr;
-}
-
 @media (min-width: 768px) {
-	.home {
-		grid-template-columns: 1fr 1fr;
-	}
-
-	.home__left {
-		display: grid;
-		place-items: center;
-	}
 }

@@ -1,3 +1,5 @@
+import AppSidebar from '@/components/AppSidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router';
@@ -14,9 +16,13 @@ export default function RootLayout() {
 
 	return (
 		<>
-			<main>
-				<Outlet />
-			</main>
+			<SidebarProvider>
+				<AppSidebar />
+				<main>
+					<SidebarTrigger />
+					<Outlet />
+				</main>
+			</SidebarProvider>
 		</>
 	);
 }
