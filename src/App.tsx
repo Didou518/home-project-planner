@@ -1,7 +1,6 @@
 import { createBrowserRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import Home from './pages/Home.tsx';
-import { checkAuthLoader } from './utils/auth.ts';
 import RootLayout from './pages/Root.tsx';
 import { action as logoutAction } from './pages/Logout.tsx';
 import { AuthProvider } from './components/AuthProvider.tsx';
@@ -12,7 +11,6 @@ const router = createBrowserRouter([
 	{
 		path: '/',
 		element: <RootLayout />,
-		loader: checkAuthLoader,
 		children: [
 			{
 				index: true,

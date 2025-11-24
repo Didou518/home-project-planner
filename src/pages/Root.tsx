@@ -1,27 +1,16 @@
-import { getSessionDuration } from '@/utils/auth';
+import { useAuthStore } from '@/stores/useAuthStore';
 import { useEffect } from 'react';
-import { Outlet, useLoaderData, useSubmit } from 'react-router';
+import { Outlet, useNavigate } from 'react-router';
 
 export default function RootLayout() {
-	const session = useLoaderData();
-	const submit = useSubmit();
+	const { user } = useAuthStore();
+	const navigate = useNavigate();
 
 	useEffect(() => {
-		if (!session) {
-			return;
+		if (!user) {
+			navigate('/signin');
 		}
-
-		if (session === 'EXPIRED') {
-			submit(null, { method: 'POST', action: '/logout' });
-			return;
-		}
-
-		const duration = getSessionDuration(session.expires_at);
-
-		setTimeout(() => {
-			submit(null, { method: 'POST', action: '/logout' });
-		}, duration);
-	}, [session, submit]);
+	}, [user, navigate]);
 
 	return (
 		<>

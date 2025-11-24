@@ -7,7 +7,7 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-	const { setSession, setIsLoading } = useAuthStore();
+	const { setSession, setUser, setIsLoading } = useAuthStore();
 
 	useEffect(() => {
 		// Set up auth state listener FIRST
@@ -15,17 +15,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 			data: { subscription },
 		} = supabase.auth.onAuthStateChange((_event, session) => {
 			setSession(session);
+			setUser(session?.user ?? null);
 			setIsLoading(false);
 		});
 
 		// THEN check for existing session
 		supabase.auth.getSession().then(({ data: { session } }) => {
 			setSession(session);
+			setUser(session?.user ?? null);
 			setIsLoading(false);
 		});
 
 		return () => subscription.unsubscribe();
-	}, [setSession, setIsLoading]);
+	}, [setSession, setUser, setIsLoading]);
 
 	return <>{children}</>;
 };
