@@ -36,12 +36,18 @@ export default function NewProjectPage() {
 		},
 	];
 
+	if (!currentPropertyId) {
+		return null;
+	}
+
 	return (
 		<>
 			<Breadcrumbs crumbs={breadcrumbs} />
 			<PageTemplate>
-				<Heading1>Nouveau projet</Heading1>
-				{currentPropertyId && <ProjectForm method="post" />}
+				<div className="flex flex-col gap-6">
+					<Heading1>Nouveau projet</Heading1>
+					<ProjectForm method="post" />
+				</div>
 			</PageTemplate>
 		</>
 	);

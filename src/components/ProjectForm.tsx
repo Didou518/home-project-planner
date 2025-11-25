@@ -4,8 +4,16 @@ import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from './ui/card';
 import { toast } from 'sonner';
 import { createProject, updateProject } from '@/integrations/supabase/client';
+import { FolderKanban, Save } from 'lucide-react';
 
 type ProjectFormProps = {
 	method: 'post' | 'patch';
@@ -16,32 +24,62 @@ export default function ProjectForm({ method, project }: ProjectFormProps) {
 	const isNew = method === 'post';
 
 	return (
-		<Form method={method} className="mt-6 space-y-4 max-w-md">
-			<div className="space-y-2">
-				<Label htmlFor="name">Nom du projet</Label>
-				<Input
-					id="name"
-					name="name"
-					type="text"
-					placeholder="Ex: Rénovation cuisine"
-					required
-					defaultValue={project?.name ?? ''}
-				/>
-			</div>
-			<div className="space-y-2">
-				<Label htmlFor="description">Description</Label>
-				<Textarea
-					id="description"
-					name="description"
-					placeholder="Description du projet..."
-					rows={4}
-					defaultValue={project?.description ?? ''}
-				/>
-			</div>
-			<Button type="submit">
-				{isNew ? 'Créer le projet' : 'Mettre à jour'}
-			</Button>
-		</Form>
+		<Card className="max-w-2xl">
+			<CardHeader>
+				<div className="flex items-center gap-2">
+					<FolderKanban className="h-5 w-5 text-muted-foreground" />
+					<CardTitle>
+						{isNew ? 'Créer un nouveau projet' : 'Modifier le projet'}
+					</CardTitle>
+				</div>
+				<CardDescription>
+					{isNew
+						? 'Remplissez les informations ci-dessous pour créer un nouveau projet de rénovation ou d\'amélioration.'
+						: 'Modifiez les informations de votre projet.'}
+				</CardDescription>
+			</CardHeader>
+			<CardContent>
+				<Form method={method} className="space-y-6">
+					<div className="space-y-2">
+						<Label htmlFor="name">Nom du projet</Label>
+						<Input
+							id="name"
+							name="name"
+							type="text"
+							placeholder="Ex: Rénovation cuisine, Isolation des combles, Aménagement jardin..."
+							required
+							defaultValue={project?.name ?? ''}
+							className="w-full"
+						/>
+						<p className="text-sm text-muted-foreground">
+							Choisissez un nom clair et descriptif pour identifier
+							votre projet.
+						</p>
+					</div>
+					<div className="space-y-2">
+						<Label htmlFor="description">Description</Label>
+						<Textarea
+							id="description"
+							name="description"
+							placeholder="Décrivez les détails de votre projet, les objectifs, le budget prévu, les étapes principales..."
+							rows={6}
+							defaultValue={project?.description ?? ''}
+							className="w-full"
+						/>
+						<p className="text-sm text-muted-foreground">
+							Une description détaillée vous aidera à suivre l'avancement
+							et les objectifs de votre projet.
+						</p>
+					</div>
+					<div className="flex gap-3 pt-2">
+						<Button type="submit" className="min-w-[140px]">
+							<Save className="mr-2 h-4 w-4" />
+							{isNew ? 'Créer le projet' : 'Mettre à jour'}
+						</Button>
+					</div>
+				</Form>
+			</CardContent>
+		</Card>
 	);
 }
 

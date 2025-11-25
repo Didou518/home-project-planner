@@ -14,8 +14,10 @@ export default function NewPropertyPage() {
 		<>
 			<Breadcrumbs crumbs={breadcrumbs} />
 			<PageTemplate>
-				<Heading1>Nouveau bien</Heading1>
-				<PropertyForm method="post" />
+				<div className="flex flex-col gap-6">
+					<Heading1>Nouveau bien</Heading1>
+					<PropertyForm method="post" />
+				</div>
 			</PageTemplate>
 		</>
 	);

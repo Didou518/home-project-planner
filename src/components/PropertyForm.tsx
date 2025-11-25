@@ -3,8 +3,16 @@ import { Form, redirect, type Params } from 'react-router';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from './ui/card';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { Home, Save } from 'lucide-react';
 
 type PropertyFormProps = {
 	method: 'post' | 'patch';
@@ -14,22 +22,47 @@ export default function PropertyForm({ method, property }: PropertyFormProps) {
 	const isNew = method === 'post';
 
 	return (
-		<Form method={method} className="mt-6 space-y-4 max-w-md">
-			<div className="space-y-2">
-				<Label htmlFor="name">Nom du bien</Label>
-				<Input
-					id="name"
-					name="name"
-					type="text"
-					placeholder="Ex: Maison principale"
-					required
-					defaultValue={property?.name ?? ''}
-				/>
-			</div>
-			<Button type="submit">
-				{isNew ? 'Créer le bien' : 'Mettre à jour'}
-			</Button>
-		</Form>
+		<Card className="max-w-2xl">
+			<CardHeader>
+				<div className="flex items-center gap-2">
+					<Home className="h-5 w-5 text-muted-foreground" />
+					<CardTitle>
+						{isNew ? 'Créer un nouveau bien' : 'Modifier le bien'}
+					</CardTitle>
+				</div>
+				<CardDescription>
+					{isNew
+						? 'Remplissez les informations ci-dessous pour créer un nouveau bien immobilier.'
+						: 'Modifiez les informations de votre bien immobilier.'}
+				</CardDescription>
+			</CardHeader>
+			<CardContent>
+				<Form method={method} className="space-y-6">
+					<div className="space-y-2">
+						<Label htmlFor="name">Nom du bien</Label>
+						<Input
+							id="name"
+							name="name"
+							type="text"
+							placeholder="Ex: Maison principale, Appartement Paris, Villa..."
+							required
+							defaultValue={property?.name ?? ''}
+							className="w-full"
+						/>
+						<p className="text-sm text-muted-foreground">
+							Choisissez un nom clair et descriptif pour identifier
+							votre bien.
+						</p>
+					</div>
+					<div className="flex gap-3 pt-2">
+						<Button type="submit" className="min-w-[140px]">
+							<Save className="mr-2 h-4 w-4" />
+							{isNew ? 'Créer le bien' : 'Mettre à jour'}
+						</Button>
+					</div>
+				</Form>
+			</CardContent>
+		</Card>
 	);
 }
 

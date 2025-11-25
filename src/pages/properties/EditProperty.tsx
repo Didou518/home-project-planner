@@ -1,5 +1,5 @@
 import PageTemplate from '@/components/PageTemplate';
-import Breadcrumbs from '@/components/Breadcrumbs';
+import Breadcrumbs, { type Crumb } from '@/components/Breadcrumbs';
 import Heading1 from '@/components/Heading1';
 import PropertyForm from '@/components/PropertyForm';
 import { useNavigate } from 'react-router';
@@ -20,7 +20,7 @@ export default function EditPropertyPage() {
 		}
 	}, [selectedProperty, navigate]);
 
-	const breadcrumbs = [
+	const breadcrumbs: Crumb[] = [
 		{
 			label: 'Accueil',
 			to: '/',
@@ -33,20 +33,28 @@ export default function EditPropertyPage() {
 			label: selectedProperty?.name ?? '',
 			to: `/properties/${selectedProperty?.id}`,
 		},
+		{
+			label: 'Modifier',
+			to: `/properties/${selectedProperty?.id}/edit`,
+		},
 	];
+
+	if (!selectedProperty) {
+		return null;
+	}
 
 	return (
 		<>
 			<Breadcrumbs crumbs={breadcrumbs} />
 			<PageTemplate>
-				<Heading1>Mon bien</Heading1>
-				{selectedProperty && (
+				<div className="flex flex-col gap-6">
+					<Heading1>Modifier le bien</Heading1>
 					<PropertyForm
 						key={selectedProperty.id}
 						method="patch"
 						property={selectedProperty}
 					/>
-				)}
+				</div>
 			</PageTemplate>
 		</>
 	);
