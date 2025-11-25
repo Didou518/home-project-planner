@@ -44,7 +44,7 @@ export async function action({
 	const name = formData.get('name') as string;
 
 	const method = request.method;
-	const isNew = method === 'post';
+	const isNew = method === 'POST';
 
 	if (!name || name.trim() === '') {
 		toast.error('Le nom du bien est requis');

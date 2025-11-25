@@ -1,0 +1,165 @@
+import Breadcrumbs, { type Crumb } from '@/components/Breadcrumbs';
+import Heading1 from '@/components/Heading1';
+import PageTemplate from '@/components/PageTemplate';
+import { Button } from '@/components/ui/button';
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card';
+import { useProjectStore } from '@/stores/useProjectStore';
+import { useSelectionStore } from '@/stores/useSelectionStore';
+import { Edit, Calendar } from 'lucide-react';
+import { NavLink, useParams, useNavigate } from 'react-router';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
+
+export default function ProjectPage() {
+	const { id: propertyId, projectId } = useParams();
+	const { selectedProperty, selectedProject, setSelectedProject } =
+		useSelectionStore();
+	const { projects, fetchProjects } = useProjectStore();
+	const navigate = useNavigate();
+
+	// Trouver le projet depuis le store ou depuis l'URL
+	const project =
+		selectedProject ||
+		(projectId ? projects.find((p) => p.id === projectId) : null);
+
+	// Charger les projets si nécessaire
+	useEffect(() => {
+		if (propertyId && selectedProperty) {
+			if (projects.length === 0 || !project) {
+				fetchProjects(propertyId);
+			}
+		}
+	}, [propertyId, selectedProperty, projects.length, project, fetchProjects]);
+
+	// Mettre à jour la sélection du projet
+	useEffect(() => {
+		if (project && project.id !== selectedProject?.id) {
+			setSelectedProject(project);
+		}
+	}, [project, selectedProject, setSelectedProject]);
+
+	// Rediriger si pas de propriété ou projet
+	useEffect(() => {
+		if (!selectedProperty) {
+			toast.error('Bien non sélectionné', {
+				description:
+					'Veuillez sélectionner un bien pour voir ses projets',
+			});
+			navigate('/properties');
+			return;
+		}
+
+		if (!project && projectId) {
+			toast.error('Projet non trouvé', {
+				description:
+					"Le projet demandé n'existe pas ou n'est plus disponible",
+			});
+			navigate(`/properties/${propertyId}/projects`);
+		}
+	}, [selectedProperty, project, projectId, propertyId, navigate]);
+
+	if (!selectedProperty || !project) {
+		return null;
+	}
+
+	const breadcrumbs: Crumb[] = [
+		{ label: 'Accueil', to: '/' },
+		{ label: 'Propriétés', to: '/properties' },
+		{
+			label: selectedProperty.name,
+			to: `/properties/${selectedProperty.id}`,
+		},
+		{
+			label: 'Projets',
+			to: `/properties/${selectedProperty.id}/projects`,
+		},
+		{
+			label: project.name,
+			to: `/properties/${selectedProperty.id}/projects/${project.id}`,
+		},
+	];
+
+	// Formater les dates
+	const formatDate = (dateString: string) => {
+		const date = new Date(dateString);
+		return date.toLocaleDateString('fr-FR', {
+			year: 'numeric',
+			month: 'long',
+			day: 'numeric',
+		});
+	};
+
+	return (
+		<>
+			<Breadcrumbs crumbs={breadcrumbs} />
+			<PageTemplate>
+				<div className="flex flex-col gap-6">
+					<div className="flex items-start justify-between">
+						<div>
+							<Heading1>{project.name}</Heading1>
+							{project.description && (
+								<p className="mt-2 text-muted-foreground">
+									{project.description}
+								</p>
+							)}
+						</div>
+						<NavLink
+							to={`/properties/${selectedProperty.id}/projects/${project.id}/edit`}
+						>
+							<Button>
+								<Edit className="mr-2 h-4 w-4" />
+								Éditer le projet
+							</Button>
+						</NavLink>
+					</div>
+
+					<Card>
+						<CardHeader>
+							<CardTitle>Informations du projet</CardTitle>
+							<CardDescription>
+								Détails et métadonnées du projet
+							</CardDescription>
+						</CardHeader>
+						<CardContent className="space-y-4">
+							<div className="flex items-center gap-2 text-sm">
+								<Calendar className="h-4 w-4 text-muted-foreground" />
+								<span className="text-muted-foreground">
+									Créé le :
+								</span>
+								<span>{formatDate(project.created_at)}</span>
+							</div>
+							{project.updated_at !== project.created_at && (
+								<div className="flex items-center gap-2 text-sm">
+									<Calendar className="h-4 w-4 text-muted-foreground" />
+									<span className="text-muted-foreground">
+										Modifié le :
+									</span>
+									<span>
+										{formatDate(project.updated_at)}
+									</span>
+								</div>
+							)}
+							<div className="pt-4 border-t">
+								<h2 className="text-base font-bold mb-2">
+									Bien associé
+								</h2>
+								<NavLink
+									to={`/properties/${selectedProperty.id}`}
+									className="text-primary hover:underline"
+								>
+									{selectedProperty.name}
+								</NavLink>
+							</div>
+						</CardContent>
+					</Card>
+				</div>
+			</PageTemplate>
+		</>
+	);
+}

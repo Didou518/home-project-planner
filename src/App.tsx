@@ -6,12 +6,17 @@ import { action as logoutAction } from './pages/Logout.tsx';
 import { AuthProvider } from './components/AuthProvider.tsx';
 import Auth, { action as authAction } from './pages/Auth.tsx';
 import { Toaster } from './components/ui/sonner.tsx';
-import NewPropertyPage from './pages/NewProperty.tsx';
+import NewPropertyPage from './pages/properties/NewProperty.tsx';
 import ErrorPage from './pages/ErrorPage.tsx';
-import EditPropertyPage from './pages/EditProperty.tsx';
-import PropertiesPage from './pages/Properties.tsx';
+import EditPropertyPage from './pages/properties/EditProperty.tsx';
+import PropertiesPage from './pages/properties/Properties.tsx';
 import { action as manipulatePropertyAction } from './components/PropertyForm.tsx';
-import NewProjectPage from './pages/NewProject.tsx';
+import NewProjectPage from './pages/projects/NewProject.tsx';
+import ProjectsPage from './pages/projects/Projects.tsx';
+import EditProjectPage from './pages/projects/EditProject.tsx';
+import { action as manipulateProjectAction } from './components/ProjectForm.tsx';
+import PropertyPage from './pages/properties/Property.tsx';
+import ProjectPage from './pages/projects/Project.tsx';
 
 function HydrateFallback() {
 	return (
@@ -46,22 +51,48 @@ const router = createBrowserRouter([
 					},
 					{
 						path: ':id',
-						element: <EditPropertyPage />,
-						action: manipulatePropertyAction,
+						children: [
+							{
+								index: true,
+								element: <PropertyPage />,
+								action: manipulatePropertyAction,
+							},
+							{
+								path: 'edit',
+								element: <EditPropertyPage />,
+								action: manipulatePropertyAction,
+							},
+							{
+								path: 'projects',
+								children: [
+									{
+										index: true,
+										element: <ProjectsPage />,
+									},
+									{
+										path: 'new',
+										element: <NewProjectPage />,
+										action: manipulateProjectAction,
+									},
+									{
+										path: ':projectId',
+										element: <ProjectPage />,
+										children: [
+											{
+												path: 'edit',
+												element: <EditProjectPage />,
+												action: manipulateProjectAction,
+											},
+										],
+									},
+								],
+							},
+						],
 					},
 					{
 						path: 'new',
 						element: <NewPropertyPage />,
 						action: manipulatePropertyAction,
-					},
-				],
-			},
-			{
-				path: 'projects',
-				children: [
-					{
-						path: 'new',
-						element: <NewProjectPage />,
 					},
 				],
 			},

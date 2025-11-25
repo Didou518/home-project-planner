@@ -1,7 +1,7 @@
 import PageTemplate from '@/components/PageTemplate';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import Heading1 from '@/components/Heading1';
-import PropertyForm from '@/components/PropertyForm';
+import ProjectForm from '@/components/ProjectForm';
 import { useNavigate } from 'react-router';
 import { useSelectionStore } from '@/stores/useSelectionStore';
 import { toast } from 'sonner';
@@ -18,29 +18,29 @@ const breadcrumbs = [
 	},
 ];
 
-export default function EditPropertyPage() {
-	const { selectedProperty } = useSelectionStore();
+export default function EditProjectPage() {
+	const { selectedProject } = useSelectionStore();
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		if (!selectedProperty) {
-			toast.error('Bien non sélectionné', {
-				description: 'Veuillez sélectionner un bien pour commencer',
+		if (!selectedProject) {
+			toast.error('Projet non sélectionné', {
+				description: 'Veuillez sélectionner un projet pour commencer',
 			});
 			navigate('/properties');
 		}
-	}, [selectedProperty, navigate]);
+	}, [selectedProject, navigate]);
 
 	return (
 		<>
 			<Breadcrumbs crumbs={breadcrumbs} />
 			<PageTemplate>
-				<Heading1>Mon bien</Heading1>
-				{selectedProperty && (
-					<PropertyForm
-						key={selectedProperty.id}
+				<Heading1>Mon projet</Heading1>
+				{selectedProject && (
+					<ProjectForm
+						key={selectedProject.id}
 						method="patch"
-						property={selectedProperty}
+						project={selectedProject}
 					/>
 				)}
 			</PageTemplate>
