@@ -9,40 +9,23 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card';
-import { useProjectStore } from '@/stores/useProjectStore';
 import { useSelectionStore } from '@/stores/useSelectionStore';
 import { Edit, Calendar } from 'lucide-react';
 import { NavLink, useParams, useNavigate } from 'react-router';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
+import { useProjects } from '@/hooks/useProjects';
 
 export default function ProjectPage() {
 	const { id: propertyId, projectId } = useParams();
-	const { selectedProperty, selectedProject, setSelectedProject } =
-		useSelectionStore();
-	const { projects, fetchProjects } = useProjectStore();
+	const { selectedProperty, selectedProject } = useSelectionStore();
+	const { data: projects } = useProjects(propertyId ?? '');
 	const navigate = useNavigate();
 
 	// Trouver le projet depuis le store ou depuis l'URL
 	const project =
 		selectedProject ||
-		(projectId ? projects.find((p) => p.id === projectId) : null);
-
-	// Charger les projets si nécessaire
-	useEffect(() => {
-		if (propertyId && selectedProperty) {
-			if (projects.length === 0 || !project) {
-				fetchProjects(propertyId);
-			}
-		}
-	}, [propertyId, selectedProperty, projects.length, project, fetchProjects]);
-
-	// Mettre à jour la sélection du projet
-	useEffect(() => {
-		if (project && project.id !== selectedProject?.id) {
-			setSelectedProject(project);
-		}
-	}, [project, selectedProject, setSelectedProject]);
+		(projectId ? projects?.find((p) => p.id === projectId) : null);
 
 	// Rediriger si pas de propriété ou projet
 	useEffect(() => {

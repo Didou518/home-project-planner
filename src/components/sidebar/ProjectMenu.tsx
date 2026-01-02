@@ -9,28 +9,31 @@ import {
 } from '../ui/sidebar';
 import { NotebookPen, Plus, FolderKanban } from 'lucide-react';
 import { type Property } from '@/types/Property';
-import { useProjectStore } from '@/stores/useProjectStore';
 import { useSelectionStore } from '@/stores/useSelectionStore';
 import { useEffect } from 'react';
+import { useProjects } from '@/hooks/useProjects';
 
 export default function ProjectMenu({ property }: { property: Property }) {
-	const { projects } = useProjectStore();
 	const { setSelectedProject } = useSelectionStore();
 	const location = useLocation();
 
+	const { data: projects, isLoading } = useProjects(property.id);
+
 	// Détecter automatiquement le projet depuis l'URL
 	useEffect(() => {
-		const pathMatch = location.pathname.match(
-			/\/properties\/[^/]+\/projects\/([^/]+)/
-		);
-		if (pathMatch && pathMatch[1] && pathMatch[1] !== 'new') {
-			const projectId = pathMatch[1];
-			const project = projects.find((p) => p.id === projectId);
-			if (project) {
-				setSelectedProject(project);
+		if (isLoading && projects) {
+			const pathMatch = location.pathname.match(
+				/\/properties\/[^/]+\/projects\/([^/]+)/
+			);
+			if (pathMatch && pathMatch[1] && pathMatch[1] !== 'new') {
+				const projectId = pathMatch[1];
+				const project = projects.find((p) => p.id === projectId);
+				if (project) {
+					setSelectedProject(project);
+				}
 			}
 		}
-	}, [location.pathname, projects, setSelectedProject]);
+	}, [location.pathname, projects, setSelectedProject, isLoading]);
 
 	return (
 		<SidebarGroup>
@@ -56,7 +59,7 @@ export default function ProjectMenu({ property }: { property: Property }) {
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				</SidebarMenu>
-				{projects.length > 0 && (
+				{!isLoading && projects && projects.length > 0 && (
 					<SidebarMenu className="mt-2">
 						<SidebarGroupLabel className="px-2 text-xs text-muted-foreground">
 							Liste des projets

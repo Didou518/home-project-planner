@@ -9,46 +9,28 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card';
-import { useProjectStore } from '@/stores/useProjectStore';
-import { usePropertyStore } from '@/stores/usePropertyStore';
 import { useSelectionStore } from '@/stores/useSelectionStore';
 import { Edit, Calendar, Plus, FolderKanban } from 'lucide-react';
 import { NavLink, useParams, useNavigate } from 'react-router';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
+import { useProjects } from '@/hooks/useProjects';
+import { useProperties } from '@/hooks/useProperties';
+import DeleteModal from '@/components/DeleteModal';
 
 export default function PropertyPage() {
 	const { id: propertyId } = useParams();
-	const { selectedProperty, setSelectedProperty } = useSelectionStore();
-	const { properties, fetchProperties } = usePropertyStore();
-	const { projects, fetchProjects } = useProjectStore();
+	const { selectedProperty } = useSelectionStore();
+	const { data: properties } = useProperties();
+	const { data: projects, isLoading: isProjectsLoading } = useProjects(
+		propertyId ?? ''
+	);
 	const navigate = useNavigate();
 
 	// Trouver la propriété depuis le store ou depuis l'URL
 	const property =
 		selectedProperty ||
-		(propertyId ? properties.find((p) => p.id === propertyId) : null);
-
-	// Charger les propriétés si nécessaire
-	useEffect(() => {
-		if (propertyId && !property) {
-			fetchProperties();
-		}
-	}, [propertyId, property, fetchProperties]);
-
-	// Mettre à jour la sélection de la propriété
-	useEffect(() => {
-		if (property && property.id !== selectedProperty?.id) {
-			setSelectedProperty(property);
-		}
-	}, [property, selectedProperty, setSelectedProperty]);
-
-	// Charger les projets quand une propriété est sélectionnée
-	useEffect(() => {
-		if (property) {
-			fetchProjects(property.id);
-		}
-	}, [property, fetchProjects]);
+		(propertyId ? properties?.find((p) => p.id === propertyId) : null);
 
 	// Rediriger si pas de propriété
 	useEffect(() => {
@@ -84,6 +66,10 @@ export default function PropertyPage() {
 		});
 	};
 
+	const handleDelete = async () => {
+		toast.error("Cette fonctionnalité n'est pas encore disponible");
+	};
+
 	return (
 		<>
 			<Breadcrumbs crumbs={breadcrumbs} />
@@ -93,12 +79,15 @@ export default function PropertyPage() {
 						<div>
 							<Heading1>{property.name}</Heading1>
 						</div>
-						<NavLink to={`/properties/${property.id}/edit`}>
-							<Button>
-								<Edit className="mr-2 h-4 w-4" />
-								Éditer le bien
-							</Button>
-						</NavLink>
+						<div className="flex justify-between gap-2">
+							<NavLink to={`/properties/${property.id}/edit`}>
+								<Button>
+									<Edit className="mr-2 h-4 w-4" />
+									Éditer le bien
+								</Button>
+							</NavLink>
+							<DeleteModal onDelete={handleDelete} />
+						</div>
 					</div>
 
 					<Card>
@@ -139,7 +128,9 @@ export default function PropertyPage() {
 							</div>
 						</CardHeader>
 						<CardContent>
-							{projects.length > 0 ? (
+							{!isProjectsLoading &&
+							projects &&
+							projects.length > 0 ? (
 								<ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
 									{projects.map((project) => (
 										<li key={project.id}>

@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import HomePage from './pages/Home.tsx';
-import RootLayout, { loader as rootLoader } from './pages/Root.tsx';
+import RootLayout from './pages/Root.tsx';
 import { action as logoutAction } from './pages/Logout.tsx';
 import { AuthProvider } from './components/AuthProvider.tsx';
 import Auth, { action as authAction } from './pages/Auth.tsx';
@@ -17,6 +17,8 @@ import EditProjectPage from './pages/projects/EditProject.tsx';
 import { action as manipulateProjectAction } from './components/ProjectForm.tsx';
 import PropertyPage from './pages/properties/Property.tsx';
 import ProjectPage from './pages/projects/Project.tsx';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './integrations/supabase/client.ts';
 
 function HydrateFallback() {
 	return (
@@ -36,7 +38,6 @@ const router = createBrowserRouter([
 		errorElement: <ErrorPage />,
 		hydrateFallbackElement: <HydrateFallback />,
 		id: 'root',
-		loader: rootLoader,
 		children: [
 			{
 				index: true,
@@ -120,9 +121,11 @@ const router = createBrowserRouter([
 
 export default function App() {
 	return (
-		<AuthProvider>
-			<RouterProvider router={router} />
-			<Toaster />
-		</AuthProvider>
+		<QueryClientProvider client={queryClient}>
+			<AuthProvider>
+				<RouterProvider router={router} />
+				<Toaster />
+			</AuthProvider>
+		</QueryClientProvider>
 	);
 }

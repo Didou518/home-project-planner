@@ -9,30 +9,26 @@ import {
 	CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useProjectStore } from '@/stores/useProjectStore';
 import { useSelectionStore } from '@/stores/useSelectionStore';
 import { Plus, FolderKanban } from 'lucide-react';
-import { useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router';
 import { toast } from 'sonner';
+import { useProjects } from '@/hooks/useProjects';
 
 export default function ProjectsPage() {
-	const { projects, fetchProjects, isLoading } = useProjectStore();
 	const { selectedProperty, setSelectedProject } = useSelectionStore();
+	const { data: projects, isLoading } = useProjects(
+		selectedProperty?.id ?? ''
+	);
 	const navigate = useNavigate();
 
-	useEffect(() => {
-		if (!selectedProperty) {
-			toast.error('Bien non sélectionné', {
-				description:
-					'Veuillez sélectionner un bien pour voir ses projets',
-			});
-			navigate('/properties');
-			return;
-		}
-
-		fetchProjects(selectedProperty.id);
-	}, [selectedProperty, fetchProjects, navigate]);
+	if (!selectedProperty) {
+		toast.error('Bien non sélectionné', {
+			description: 'Veuillez sélectionner un bien pour voir ses projets',
+		});
+		navigate('/properties');
+		return;
+	}
 
 	const breadcrumbs: Crumb[] = [
 		{ label: 'Accueil', to: '/' },
@@ -75,7 +71,8 @@ export default function ProjectsPage() {
 							<CardHeader>
 								<CardTitle>Liste des projets</CardTitle>
 								<CardDescription>
-									Projets associés au bien "{selectedProperty?.name}"
+									Projets associés au bien "
+									{selectedProperty?.name}"
 								</CardDescription>
 							</CardHeader>
 							<CardContent>
@@ -87,7 +84,9 @@ export default function ProjectsPage() {
 													to={`/properties/${selectedProperty?.id}/projects/${project.id}`}
 													className="block"
 													onClick={() =>
-														setSelectedProject(project)
+														setSelectedProject(
+															project
+														)
 													}
 												>
 													<Card className="hover:bg-accent transition-colors cursor-pointer">
@@ -95,7 +94,9 @@ export default function ProjectsPage() {
 															<div className="flex items-center gap-2">
 																<FolderKanban className="h-4 w-4 text-muted-foreground" />
 																<CardTitle className="text-base">
-																	{project.name}
+																	{
+																		project.name
+																	}
 																</CardTitle>
 															</div>
 															{project.description && (

@@ -12,7 +12,11 @@ import {
 	CardTitle,
 } from './ui/card';
 import { toast } from 'sonner';
-import { createProject, updateProject } from '@/integrations/supabase/client';
+import {
+	createProject,
+	queryClient,
+	updateProject,
+} from '@/integrations/supabase/client';
 import { FolderKanban, Save } from 'lucide-react';
 
 type ProjectFormProps = {
@@ -29,12 +33,14 @@ export default function ProjectForm({ method, project }: ProjectFormProps) {
 				<div className="flex items-center gap-2">
 					<FolderKanban className="h-5 w-5 text-muted-foreground" />
 					<CardTitle>
-						{isNew ? 'Créer un nouveau projet' : 'Modifier le projet'}
+						{isNew
+							? 'Créer un nouveau projet'
+							: 'Modifier le projet'}
 					</CardTitle>
 				</div>
 				<CardDescription>
 					{isNew
-						? 'Remplissez les informations ci-dessous pour créer un nouveau projet de rénovation ou d\'amélioration.'
+						? "Remplissez les informations ci-dessous pour créer un nouveau projet de rénovation ou d'amélioration."
 						: 'Modifiez les informations de votre projet.'}
 				</CardDescription>
 			</CardHeader>
@@ -52,8 +58,8 @@ export default function ProjectForm({ method, project }: ProjectFormProps) {
 							className="w-full"
 						/>
 						<p className="text-sm text-muted-foreground">
-							Choisissez un nom clair et descriptif pour identifier
-							votre projet.
+							Choisissez un nom clair et descriptif pour
+							identifier votre projet.
 						</p>
 					</div>
 					<div className="space-y-2">
@@ -67,8 +73,8 @@ export default function ProjectForm({ method, project }: ProjectFormProps) {
 							className="w-full"
 						/>
 						<p className="text-sm text-muted-foreground">
-							Une description détaillée vous aidera à suivre l'avancement
-							et les objectifs de votre projet.
+							Une description détaillée vous aidera à suivre
+							l'avancement et les objectifs de votre projet.
 						</p>
 					</div>
 					<div className="flex gap-3 pt-2">
@@ -103,9 +109,10 @@ export async function action({
 	}
 
 	try {
+		const propertyId = params.id;
+
 		if (isNew) {
 			// Pour la création, on a besoin de property_id depuis les params (id de la route parent)
-			const propertyId = params.id;
 			if (!propertyId) {
 				toast.error('Property ID manquant');
 				return redirect('/properties');
@@ -120,8 +127,6 @@ export async function action({
 			toast.success('Projet créé avec succès', {
 				description: `Le projet "${name}" a été créé.`,
 			});
-
-			return redirect(`/properties/${propertyId}`);
 		} else {
 			const projectId = params.projectId;
 			if (!projectId) {
@@ -129,7 +134,7 @@ export async function action({
 				return redirect('/properties');
 			}
 
-			const updatedProject = await updateProject(projectId, {
+			await updateProject(projectId, {
 				name: name.trim(),
 				description: description?.trim() || null,
 			});
@@ -137,9 +142,11 @@ export async function action({
 			toast.success('Projet modifié avec succès', {
 				description: `Le projet "${name}" a été modifié.`,
 			});
-
-			return redirect(`/properties/${updatedProject.property_id}`);
 		}
+
+		queryClient.invalidateQueries({ queryKey: ['events'] });
+
+		return redirect(`/properties/${propertyId}`);
 	} catch (error) {
 		let message = `Une erreur est survenue lors de ${isNew ? 'la création' : 'la modification'} du projet`;
 		if (error instanceof Error) {

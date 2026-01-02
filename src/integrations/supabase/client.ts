@@ -5,9 +5,12 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Property } from '@/types/Property';
 import type { Project } from '@/types/Project';
+import { QueryClient } from '@tanstack/react-query';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+export const queryClient = new QueryClient();
 
 /**
  * Client Supabase configuré (session persistée dans localStorage)
@@ -66,6 +69,16 @@ export const signOut = async () => {
 };
 
 /**
+ * Récupère l'utilisateur connecté
+ * @throws {Error} Si l'utilisateur n'est pas connecté ou si une erreur survient
+ */
+export const getUser = async () => {
+	const { data, error } = await supabase.auth.getUser();
+	if (error) throw error;
+	return data.user;
+};
+
+/**
  * Récupère toutes les properties de l'utilisateur connecté
  * @throws {Error} Si l'utilisateur n'est pas connecté ou si une erreur survient
  */
@@ -94,7 +107,7 @@ export const getProperties = async () => {
  * @throws {Error} Si l'utilisateur n'est pas connecté ou si une erreur survient
  */
 export const createProperty = async (
-	property: Omit<Property, 'id' | 'created_at'>
+	property: Omit<Property, 'id' | 'created_at' | 'owner_id'>
 ) => {
 	const {
 		data: { user },
@@ -106,9 +119,7 @@ export const createProperty = async (
 
 	const { data, error } = await supabase
 		.from('properties')
-		.insert([{ ...property, owner_id: user.id }])
-		.select()
-		.single();
+		.insert([{ ...property, owner_id: user.id }]);
 
 	if (error) throw error;
 
@@ -126,9 +137,7 @@ export const updateProperty = async (
 	const { data, error } = await supabase
 		.from('properties')
 		.update(updates)
-		.eq('id', id)
-		.select()
-		.single();
+		.eq('id', id);
 
 	if (error) throw error;
 

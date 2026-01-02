@@ -1,4 +1,4 @@
-import { Form, NavLink, useLocation, useRouteLoaderData } from 'react-router';
+import { Form, NavLink, useLocation } from 'react-router';
 import {
 	Sidebar,
 	SidebarContent,
@@ -13,13 +13,11 @@ import {
 } from '../ui/sidebar';
 import { Button } from '../ui/button';
 import { LayoutDashboard, LogOut } from 'lucide-react';
-import { usePropertyStore } from '@/stores/usePropertyStore';
-import { useEffect, useMemo } from 'react';
-import type { Property } from '@/types/Property';
+import { useEffect } from 'react';
 import PropertyMenu from './PropertyMenu';
 import ProjectMenu from './ProjectMenu';
 import { useSelectionStore } from '@/stores/useSelectionStore';
-import { useProjectStore } from '@/stores/useProjectStore';
+import { useProperties } from '@/hooks/useProperties';
 
 const menuItems = [
 	{
@@ -30,50 +28,32 @@ const menuItems = [
 ];
 
 export default function AppSidebar() {
-	const { setProperties, properties: storeProperties } = usePropertyStore();
 	const { selectedProperty, setSelectedProperty } = useSelectionStore();
-	const { setProjects, fetchProjects } = useProjectStore();
 	const location = useLocation();
-	const loaderData = useRouteLoaderData<{ properties: Property[] }>('root');
-	const properties = useMemo(
-		() => loaderData?.properties ?? [],
-		[loaderData]
-	);
 
-	// Synchroniser les propriétés du loader avec le store
-	useEffect(() => {
-		setProperties(properties);
-	}, [properties, setProperties]);
+	const { data: properties, isLoading: isPropertiesLoading } =
+		useProperties();
 
 	// Détecter automatiquement la propriété depuis l'URL et charger les projets
 	useEffect(() => {
-		const pathMatch = location.pathname.match(/\/properties\/([^/]+)/);
-		if (pathMatch && pathMatch[1] && pathMatch[1] !== 'new') {
-			const propertyId = pathMatch[1];
-			const property =
-				storeProperties.find((p) => p.id === propertyId) ||
-				properties.find((p) => p.id === propertyId);
+		if (!isPropertiesLoading && properties) {
+			const pathMatch = location.pathname.match(/\/properties\/([^/]+)/);
+			if (pathMatch && pathMatch[1] && pathMatch[1] !== 'new') {
+				const propertyId = pathMatch[1];
+				const property = properties.find((p) => p.id === propertyId);
 
-			if (property && property.id !== selectedProperty?.id) {
-				setSelectedProperty(property);
+				if (property && property.id !== selectedProperty?.id) {
+					setSelectedProperty(property);
+				}
 			}
 		}
 	}, [
 		location.pathname,
-		storeProperties,
 		properties,
 		selectedProperty,
 		setSelectedProperty,
+		isPropertiesLoading,
 	]);
-
-	// Charger les projets quand une propriété est sélectionnée
-	useEffect(() => {
-		if (selectedProperty) {
-			fetchProjects(selectedProperty.id);
-		} else {
-			setProjects([]);
-		}
-	}, [selectedProperty, fetchProjects, setProjects]);
 
 	return (
 		<>
@@ -97,7 +77,9 @@ export default function AppSidebar() {
 							</SidebarMenu>
 						</SidebarGroupContent>
 					</SidebarGroup>
-					<PropertyMenu properties={properties} />
+					{!isPropertiesLoading && properties && (
+						<PropertyMenu properties={properties} />
+					)}
 					{selectedProperty && (
 						<ProjectMenu property={selectedProperty} />
 					)}

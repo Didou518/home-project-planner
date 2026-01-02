@@ -11,7 +11,13 @@ import {
 	CardTitle,
 } from './ui/card';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import {
+	createProperty,
+	getUser,
+	queryClient,
+	supabase,
+	updateProperty,
+} from '@/integrations/supabase/client';
 import { Home, Save } from 'lucide-react';
 
 type PropertyFormProps = {
@@ -50,8 +56,8 @@ export default function PropertyForm({ method, property }: PropertyFormProps) {
 							className="w-full"
 						/>
 						<p className="text-sm text-muted-foreground">
-							Choisissez un nom clair et descriptif pour identifier
-							votre bien.
+							Choisissez un nom clair et descriptif pour
+							identifier votre bien.
 						</p>
 					</div>
 					<div className="flex gap-3 pt-2">
@@ -76,22 +82,23 @@ export async function action({
 	const formData = await request.formData();
 	const name = formData.get('name') as string;
 
-	const method = request.method;
-	const isNew = method === 'POST';
-
 	if (!name || name.trim() === '') {
 		toast.error('Le nom du bien est requis');
 		return null;
 	}
 
+	const property: Omit<Property, 'id' | 'created_at' | 'owner_id'> = {
+		name: name.trim(),
+	};
+
+	const method = request.method;
+	const isNew = method === 'POST';
+
 	try {
 		// Récupérer l'utilisateur actuel
-		const {
-			data: { user },
-			error: userError,
-		} = await supabase.auth.getUser();
+		const user = await getUser();
 
-		if (userError || !user) {
+		if (!user) {
 			toast.error(
 				`Vous devez être connecté pour ${isNew ? 'créer' : 'modifier'} un bien`
 			);
@@ -100,13 +107,7 @@ export async function action({
 
 		if (isNew) {
 			// Insérer la nouvelle propriété
-			const { error } = await supabase
-				.from('properties')
-				.insert([{ name: name.trim(), owner_id: user.id }]);
-
-			if (error) {
-				throw error;
-			}
+			await createProperty(property);
 
 			toast.success('Bien créé avec succès', {
 				description: `Le bien "${name}" a été créé.`,
@@ -119,17 +120,14 @@ export async function action({
 			}
 
 			// Modifier la propriété
-			const { error } = await supabase
-				.from('properties')
-				.update({ name: name.trim() })
-				.eq('id', id);
-
-			if (error) throw error;
+			await updateProperty(id, { name: name.trim() });
 
 			toast.success('Bien modifié avec succès', {
 				description: `Le bien "${name}" a été modifié.`,
 			});
 		}
+
+		queryClient.invalidateQueries({ queryKey: ['events'] });
 
 		return redirect('/');
 	} catch (error) {

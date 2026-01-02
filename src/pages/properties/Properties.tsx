@@ -9,11 +9,10 @@ import {
 	CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { usePropertyStore } from '@/stores/usePropertyStore';
 import { useSelectionStore } from '@/stores/useSelectionStore';
 import { Plus, Home } from 'lucide-react';
-import { useEffect } from 'react';
 import { NavLink } from 'react-router';
+import { useProperties } from '@/hooks/useProperties';
 
 const breadcrumbs: Crumb[] = [
 	{ label: 'Accueil', to: '/' },
@@ -21,12 +20,8 @@ const breadcrumbs: Crumb[] = [
 ];
 
 export default function PropertiesPage() {
-	const { properties, fetchProperties, isLoading } = usePropertyStore();
 	const { setSelectedProperty } = useSelectionStore();
-
-	useEffect(() => {
-		fetchProperties();
-	}, [fetchProperties]);
+	const { data: properties, isLoading, error } = useProperties();
 
 	return (
 		<>
@@ -62,7 +57,9 @@ export default function PropertiesPage() {
 													to={`/properties/${property.id}`}
 													className="block"
 													onClick={() =>
-														setSelectedProperty(property)
+														setSelectedProperty(
+															property
+														)
 													}
 												>
 													<Card className="hover:bg-accent transition-colors cursor-pointer">
@@ -70,7 +67,9 @@ export default function PropertiesPage() {
 															<div className="flex items-center gap-2">
 																<Home className="h-4 w-4 text-muted-foreground" />
 																<CardTitle className="text-base">
-																	{property.name}
+																	{
+																		property.name
+																	}
 																</CardTitle>
 															</div>
 														</CardHeader>
