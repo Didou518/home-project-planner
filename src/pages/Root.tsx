@@ -5,14 +5,14 @@ import { useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router';
 
 export default function RootLayout() {
-	const { user } = useAuthStore();
+	const { user, isLoading } = useAuthStore();
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		if (!user) {
+		if (!isLoading && !user) {
 			navigate('/signin');
 		}
-	}, [user, navigate]);
+	}, [user, navigate, isLoading]);
 
 	return (
 		<>

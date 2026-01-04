@@ -15,12 +15,22 @@ import { NavLink, useParams, useNavigate } from 'react-router';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { useProjects } from '@/hooks/useProjects';
+import { useProperties } from '@/hooks/useProperties';
 
 export default function ProjectPage() {
 	const { id: propertyId, projectId } = useParams();
 	const { selectedProperty, selectedProject } = useSelectionStore();
-	const { data: projects } = useProjects(propertyId ?? '');
+	const { data: properties, isLoading: isPropertiesLoading } =
+		useProperties();
+	const { data: projects, isLoading: isProjectsLoading } = useProjects(
+		propertyId ?? ''
+	);
 	const navigate = useNavigate();
+
+	// Trouver la propriété depuis le store ou depuis l'URL
+	const property =
+		selectedProperty ||
+		(propertyId ? properties?.find((p) => p.id === propertyId) : null);
 
 	// Trouver le projet depuis le store ou depuis l'URL
 	const project =
@@ -29,7 +39,7 @@ export default function ProjectPage() {
 
 	// Rediriger si pas de propriété ou projet
 	useEffect(() => {
-		if (!selectedProperty) {
+		if (!isPropertiesLoading && !property) {
 			toast.error('Bien non sélectionné', {
 				description:
 					'Veuillez sélectionner un bien pour voir ses projets',
@@ -38,14 +48,23 @@ export default function ProjectPage() {
 			return;
 		}
 
-		if (!project && projectId) {
+		if (!isProjectsLoading && !project && projectId) {
 			toast.error('Projet non trouvé', {
 				description:
 					"Le projet demandé n'existe pas ou n'est plus disponible",
 			});
 			navigate(`/properties/${propertyId}/projects`);
 		}
-	}, [selectedProperty, project, projectId, propertyId, navigate]);
+	}, [
+		selectedProperty,
+		project,
+		projectId,
+		propertyId,
+		navigate,
+		isProjectsLoading,
+		isPropertiesLoading,
+		property,
+	]);
 
 	if (!selectedProperty || !project) {
 		return null;

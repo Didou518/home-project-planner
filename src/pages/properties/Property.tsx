@@ -21,7 +21,8 @@ import DeleteModal from '@/components/DeleteModal';
 export default function PropertyPage() {
 	const { id: propertyId } = useParams();
 	const { selectedProperty } = useSelectionStore();
-	const { data: properties } = useProperties();
+	const { data: properties, isLoading: isPropertiesLoading } =
+		useProperties();
 	const { data: projects, isLoading: isProjectsLoading } = useProjects(
 		propertyId ?? ''
 	);
@@ -34,14 +35,14 @@ export default function PropertyPage() {
 
 	// Rediriger si pas de propriété
 	useEffect(() => {
-		if (!property && propertyId) {
+		if (!isPropertiesLoading && !property && propertyId) {
 			toast.error('Bien non trouvé', {
 				description:
 					"Le bien demandé n'existe pas ou n'est plus disponible",
 			});
 			navigate('/properties');
 		}
-	}, [property, propertyId, navigate]);
+	}, [property, propertyId, navigate, isPropertiesLoading]);
 
 	if (!property) {
 		return null;
