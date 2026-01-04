@@ -15,7 +15,6 @@ import {
 	createProperty,
 	getUser,
 	queryClient,
-	supabase,
 	updateProperty,
 } from '@/integrations/supabase/client';
 import { Home, Save } from 'lucide-react';
@@ -127,7 +126,7 @@ export async function action({
 			});
 		}
 
-		queryClient.invalidateQueries({ queryKey: ['events'] });
+		queryClient.invalidateQueries({ queryKey: ['properties'] });
 
 		return redirect('/');
 	} catch (error) {

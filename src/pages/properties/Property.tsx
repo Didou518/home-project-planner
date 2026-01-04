@@ -10,13 +10,15 @@ import {
 	CardTitle,
 } from '@/components/ui/card';
 import { useSelectionStore } from '@/stores/useSelectionStore';
-import { Edit, Calendar, Plus, FolderKanban } from 'lucide-react';
+import { Edit, Calendar, Plus, FolderKanban, Loader2 } from 'lucide-react';
 import { NavLink, useParams, useNavigate } from 'react-router';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { useProjects } from '@/hooks/useProjects';
 import { useProperties } from '@/hooks/useProperties';
 import DeleteModal from '@/components/DeleteModal';
+import { useMutation } from '@tanstack/react-query';
+import { deleteProperty, queryClient } from '@/integrations/supabase/client';
 
 export default function PropertyPage() {
 	const { id: propertyId } = useParams();
@@ -32,6 +34,19 @@ export default function PropertyPage() {
 	const property =
 		selectedProperty ||
 		(propertyId ? properties?.find((p) => p.id === propertyId) : null);
+
+	const { mutate: deletePropertyMutation, isPending: isDeletingProperty } =
+		useMutation({
+			mutationFn: () => deleteProperty(property.id),
+			onSuccess: () => {
+				toast.success('Bien supprimé avec succès');
+				queryClient.invalidateQueries({ queryKey: ['properties'] });
+				navigate('/properties');
+			},
+			onError: () => {
+				toast.error('Erreur lors de la suppression du bien');
+			},
+		});
 
 	// Rediriger si pas de propriété
 	useEffect(() => {
@@ -68,7 +83,7 @@ export default function PropertyPage() {
 	};
 
 	const handleDelete = async () => {
-		toast.error("Cette fonctionnalité n'est pas encore disponible");
+		deletePropertyMutation();
 	};
 
 	return (
@@ -87,7 +102,14 @@ export default function PropertyPage() {
 									Éditer le bien
 								</Button>
 							</NavLink>
-							<DeleteModal onDelete={handleDelete} />
+							{isDeletingProperty ? (
+								<Button disabled>
+									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									Suppression...
+								</Button>
+							) : (
+								<DeleteModal onDelete={handleDelete} />
+							)}
 						</div>
 					</div>
 

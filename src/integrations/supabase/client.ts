@@ -10,7 +10,13 @@ import { QueryClient } from '@tanstack/react-query';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-export const queryClient = new QueryClient();
+export const queryClient = new QueryClient({
+	defaultOptions: {
+		queries: {
+			staleTime: 1000 * 60 * 5, // 5 minutes
+		},
+	},
+});
 
 /**
  * Client Supabase configuré (session persistée dans localStorage)
@@ -150,7 +156,6 @@ export const updateProperty = async (
  */
 export const deleteProperty = async (id: string) => {
 	const { error } = await supabase.from('properties').delete().eq('id', id);
-
 	if (error) throw error;
 };
 

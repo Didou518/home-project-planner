@@ -144,7 +144,7 @@ export async function action({
 			});
 		}
 
-		queryClient.invalidateQueries({ queryKey: ['events'] });
+		queryClient.invalidateQueries({ queryKey: ['projects'] });
 
 		return redirect(`/properties/${propertyId}`);
 	} catch (error) {

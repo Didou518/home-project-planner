@@ -10,12 +10,15 @@ import {
 	CardTitle,
 } from '@/components/ui/card';
 import { useSelectionStore } from '@/stores/useSelectionStore';
-import { Edit, Calendar } from 'lucide-react';
+import { Edit, Calendar, Loader2 } from 'lucide-react';
 import { NavLink, useParams, useNavigate } from 'react-router';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { useProjects } from '@/hooks/useProjects';
 import { useProperties } from '@/hooks/useProperties';
+import { deleteProject, queryClient } from '@/integrations/supabase/client';
+import { useMutation } from '@tanstack/react-query';
+import DeleteModal from '@/components/DeleteModal';
 
 export default function ProjectPage() {
 	const { id: propertyId, projectId } = useParams();
@@ -36,6 +39,19 @@ export default function ProjectPage() {
 	const project =
 		selectedProject ||
 		(projectId ? projects?.find((p) => p.id === projectId) : null);
+
+	const { mutate: deleteProjectMutation, isPending: isDeletingProject } =
+		useMutation({
+			mutationFn: () => deleteProject(project.id),
+			onSuccess: () => {
+				toast.success('Projet supprimé avec succès');
+				queryClient.invalidateQueries({ queryKey: ['projects'] });
+				navigate(`/properties/${propertyId}/projects`);
+			},
+			onError: () => {
+				toast.error('Erreur lors de la suppression du projet');
+			},
+		});
 
 	// Rediriger si pas de propriété ou projet
 	useEffect(() => {
@@ -97,6 +113,10 @@ export default function ProjectPage() {
 		});
 	};
 
+	const handleDelete = async () => {
+		deleteProjectMutation();
+	};
+
 	return (
 		<>
 			<Breadcrumbs crumbs={breadcrumbs} />
@@ -111,14 +131,24 @@ export default function ProjectPage() {
 								</p>
 							)}
 						</div>
-						<NavLink
-							to={`/properties/${selectedProperty.id}/projects/${project.id}/edit`}
-						>
-							<Button>
-								<Edit className="mr-2 h-4 w-4" />
-								Éditer le projet
-							</Button>
-						</NavLink>
+						<div className="flex justify-between gap-2">
+							<NavLink
+								to={`/properties/${selectedProperty.id}/projects/${project.id}/edit`}
+							>
+								<Button>
+									<Edit className="mr-2 h-4 w-4" />
+									Éditer le projet
+								</Button>
+							</NavLink>
+							{isDeletingProject ? (
+								<Button disabled>
+									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									Suppression...
+								</Button>
+							) : (
+								<DeleteModal onDelete={handleDelete} />
+							)}
+						</div>
 					</div>
 
 					<Card>
