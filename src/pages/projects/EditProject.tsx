@@ -1,53 +1,65 @@
 import PageTemplate from '@/components/PageTemplate';
 import Breadcrumbs, { type Crumb } from '@/components/Breadcrumbs';
 import Heading1 from '@/components/Heading1';
+import PageMessage from '@/components/PageMessage';
 import ProjectForm from '@/components/ProjectForm';
-import { useNavigate } from 'react-router';
-import { useSelectionStore } from '@/stores/useSelectionStore';
-import { toast } from 'sonner';
-import { useEffect } from 'react';
+import { useParams } from 'react-router';
+import { useProperty } from '@/hooks/useProperty';
+import { useProject } from '@/hooks/useProject';
 
 export default function EditProjectPage() {
-	const { selectedProject, selectedProperty } = useSelectionStore();
-	const navigate = useNavigate();
+	const { id: propertyId, projectId } = useParams();
+	const {
+		data: property,
+		isLoading: isPropertyLoading,
+		error: propertyError,
+	} = useProperty(propertyId ?? '');
+	const {
+		data: project,
+		isLoading: isProjectLoading,
+		error: projectError,
+	} = useProject(projectId ?? '');
 
-	useEffect(() => {
-		if (!selectedProject) {
-			toast.error('Projet non sélectionné', {
-				description: 'Veuillez sélectionner un projet pour commencer',
-			});
-			navigate('/properties');
-		}
-	}, [selectedProject, navigate]);
-
-	if (!selectedProject || !selectedProperty) {
-		return null;
+	if (isPropertyLoading || isProjectLoading) {
+		return <PageMessage loading />;
+	}
+	if (propertyError || projectError) {
+		return (
+			<PageMessage
+				title="Erreur de chargement"
+				description="Impossible de charger ce projet. Réessayez plus tard."
+				backTo="/properties"
+				backLabel="Voir mes biens"
+			/>
+		);
+	}
+	if (!property || !project) {
+		return (
+			<PageMessage
+				title="Projet introuvable"
+				description="Ce projet n'existe pas ou n'est plus accessible."
+				backTo={
+					property
+						? `/properties/${property.id}/projects`
+						: '/properties'
+				}
+				backLabel={property ? 'Voir les projets' : 'Voir mes biens'}
+			/>
+		);
 	}
 
 	const breadcrumbs: Crumb[] = [
+		{ label: 'Accueil', to: '/' },
+		{ label: 'Biens', to: '/properties' },
+		{ label: property.name, to: `/properties/${property.id}` },
+		{ label: 'Projets', to: `/properties/${property.id}/projects` },
 		{
-			label: 'Accueil',
-			to: '/',
-		},
-		{
-			label: 'Propriétés',
-			to: '/properties',
-		},
-		{
-			label: selectedProperty.name,
-			to: `/properties/${selectedProperty.id}`,
-		},
-		{
-			label: 'Projets',
-			to: `/properties/${selectedProperty.id}/projects`,
-		},
-		{
-			label: selectedProject.name,
-			to: `/properties/${selectedProperty.id}/projects/${selectedProject.id}`,
+			label: project.name,
+			to: `/properties/${property.id}/projects/${project.id}`,
 		},
 		{
 			label: 'Modifier',
-			to: `/properties/${selectedProperty.id}/projects/${selectedProject.id}/edit`,
+			to: `/properties/${property.id}/projects/${project.id}/edit`,
 		},
 	];
 
@@ -58,9 +70,9 @@ export default function EditProjectPage() {
 				<div className="flex flex-col gap-6">
 					<Heading1>Modifier le projet</Heading1>
 					<ProjectForm
-						key={selectedProject.id}
+						key={project.id}
 						method="patch"
-						project={selectedProject}
+						project={project}
 					/>
 				</div>
 			</PageTemplate>

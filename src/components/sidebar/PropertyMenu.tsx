@@ -8,7 +8,6 @@ import {
 	SidebarMenuItem,
 } from '../ui/sidebar';
 import { NavLink, useLocation } from 'react-router';
-import { useSelectionStore } from '@/stores/useSelectionStore';
 import type { Property } from '@/types/Property';
 
 export default function PropertyMenu({
@@ -16,7 +15,6 @@ export default function PropertyMenu({
 }: {
 	properties: Property[];
 }) {
-	const { setSelectedProperty } = useSelectionStore();
 	const location = useLocation();
 
 	return (
@@ -60,9 +58,6 @@ export default function PropertyMenu({
 									>
 										<NavLink
 											to={`/properties/${property.id}`}
-											onClick={() =>
-												setSelectedProperty(property)
-											}
 										>
 											<Home className="h-4 w-4" />
 											<span className="truncate">

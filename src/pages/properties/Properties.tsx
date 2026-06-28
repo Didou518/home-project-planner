@@ -9,18 +9,16 @@ import {
 	CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useSelectionStore } from '@/stores/useSelectionStore';
 import { Plus, Home } from 'lucide-react';
 import { NavLink } from 'react-router';
 import { useProperties } from '@/hooks/useProperties';
 
 const breadcrumbs: Crumb[] = [
 	{ label: 'Accueil', to: '/' },
-	{ label: 'Propriétés', to: '/properties' },
+	{ label: 'Biens', to: '/properties' },
 ];
 
 export default function PropertiesPage() {
-	const { setSelectedProperty } = useSelectionStore();
 	const { data: properties, isLoading, error } = useProperties();
 
 	return (
@@ -40,6 +38,11 @@ export default function PropertiesPage() {
 
 					{isLoading ? (
 						<p className="mt-8">Chargement...</p>
+					) : error ? (
+						<p className="mt-8 text-destructive">
+							Impossible de charger vos biens. Réessayez plus
+							tard.
+						</p>
 					) : (
 						<Card>
 							<CardHeader>
@@ -56,11 +59,6 @@ export default function PropertiesPage() {
 												<NavLink
 													to={`/properties/${property.id}`}
 													className="block"
-													onClick={() =>
-														setSelectedProperty(
-															property
-														)
-													}
 												>
 													<Card className="hover:bg-accent transition-colors cursor-pointer">
 														<CardHeader>

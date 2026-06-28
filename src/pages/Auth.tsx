@@ -113,19 +113,12 @@ export async function action({ request }: { request: Request }) {
 	}
 
 	try {
-		let data;
 		if (isSignIn) {
-			data = await signInWithPassword({ email, password });
-		} else {
-			data = await signUpWithPassword({ email, password });
-		}
-
-		if (isSignIn) {
-			localStorage.setItem('session', JSON.stringify(data.session));
+			await signInWithPassword({ email, password });
 			toast.success('You are now logged in');
-
 			return redirect('/');
 		} else {
+			await signUpWithPassword({ email, password });
 			toast.success('Your account has been created', {
 				description:
 					'You have received an email to confirm your account. Please check your inbox.',

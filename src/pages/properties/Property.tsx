@@ -1,6 +1,7 @@
 import Breadcrumbs, { type Crumb } from '@/components/Breadcrumbs';
 import Heading1 from '@/components/Heading1';
 import PageTemplate from '@/components/PageTemplate';
+import PageMessage from '@/components/PageMessage';
 import { Button } from '@/components/ui/button';
 import {
 	Card,
@@ -9,35 +10,31 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card';
-import { useSelectionStore } from '@/stores/useSelectionStore';
 import { Edit, Calendar, Plus, FolderKanban, Loader2 } from 'lucide-react';
 import { NavLink, useParams, useNavigate } from 'react-router';
-import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { useProjects } from '@/hooks/useProjects';
-import { useProperties } from '@/hooks/useProperties';
+import { useProperty } from '@/hooks/useProperty';
 import DeleteModal from '@/components/DeleteModal';
 import { useMutation } from '@tanstack/react-query';
 import { deleteProperty, queryClient } from '@/integrations/supabase/client';
 
 export default function PropertyPage() {
 	const { id: propertyId } = useParams();
-	const { selectedProperty } = useSelectionStore();
-	const { data: properties, isLoading: isPropertiesLoading } =
-		useProperties();
+	const navigate = useNavigate();
+
+	const {
+		data: property,
+		isLoading: isPropertyLoading,
+		error: propertyError,
+	} = useProperty(propertyId ?? '');
 	const { data: projects, isLoading: isProjectsLoading } = useProjects(
 		propertyId ?? ''
 	);
-	const navigate = useNavigate();
-
-	// Trouver la propriété depuis le store ou depuis l'URL
-	const property =
-		selectedProperty ||
-		(propertyId ? properties?.find((p) => p.id === propertyId) : null);
 
 	const { mutate: deletePropertyMutation, isPending: isDeletingProperty } =
 		useMutation({
-			mutationFn: () => deleteProperty(property.id),
+			mutationFn: () => deleteProperty(propertyId ?? ''),
 			onSuccess: () => {
 				toast.success('Bien supprimé avec succès');
 				queryClient.invalidateQueries({ queryKey: ['properties'] });
@@ -48,31 +45,36 @@ export default function PropertyPage() {
 			},
 		});
 
-	// Rediriger si pas de propriété
-	useEffect(() => {
-		if (!isPropertiesLoading && !property && propertyId) {
-			toast.error('Bien non trouvé', {
-				description:
-					"Le bien demandé n'existe pas ou n'est plus disponible",
-			});
-			navigate('/properties');
-		}
-	}, [property, propertyId, navigate, isPropertiesLoading]);
-
+	if (isPropertyLoading) {
+		return <PageMessage loading />;
+	}
+	if (propertyError) {
+		return (
+			<PageMessage
+				title="Erreur de chargement"
+				description="Impossible de charger ce bien. Réessayez plus tard."
+				backTo="/properties"
+				backLabel="Voir mes biens"
+			/>
+		);
+	}
 	if (!property) {
-		return null;
+		return (
+			<PageMessage
+				title="Bien introuvable"
+				description="Ce bien n'existe pas ou n'est plus accessible."
+				backTo="/properties"
+				backLabel="Voir mes biens"
+			/>
+		);
 	}
 
 	const breadcrumbs: Crumb[] = [
 		{ label: 'Accueil', to: '/' },
-		{ label: 'Propriétés', to: '/properties' },
-		{
-			label: property.name,
-			to: `/properties/${property.id}`,
-		},
+		{ label: 'Biens', to: '/properties' },
+		{ label: property.name, to: `/properties/${property.id}` },
 	];
 
-	// Formater les dates
 	const formatDate = (dateString: string) => {
 		const date = new Date(dateString);
 		return date.toLocaleDateString('fr-FR', {
@@ -80,10 +82,6 @@ export default function PropertyPage() {
 			month: 'long',
 			day: 'numeric',
 		});
-	};
-
-	const handleDelete = async () => {
-		deletePropertyMutation();
 	};
 
 	return (
@@ -108,7 +106,9 @@ export default function PropertyPage() {
 									Suppression...
 								</Button>
 							) : (
-								<DeleteModal onDelete={handleDelete} />
+								<DeleteModal
+									onDelete={() => deletePropertyMutation()}
+								/>
 							)}
 						</div>
 					</div>
@@ -187,8 +187,7 @@ export default function PropertyPage() {
 									<FolderKanban className="h-12 w-12 mx-auto mb-4 opacity-50" />
 									<p>Aucun projet pour ce bien</p>
 									<p className="text-sm mt-2">
-										Créez votre premier projet pour
-										commencer
+										Créez votre premier projet pour commencer
 									</p>
 								</div>
 							)}

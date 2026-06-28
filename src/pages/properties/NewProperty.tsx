@@ -5,7 +5,7 @@ import PropertyForm from '@/components/PropertyForm';
 
 const breadcrumbs: Crumb[] = [
 	{ label: 'Accueil', to: '/' },
-	{ label: 'Propriétés', to: '/properties' },
+	{ label: 'Biens', to: '/properties' },
 	{ label: 'Nouveau bien', to: '/properties/new' },
 ];
 

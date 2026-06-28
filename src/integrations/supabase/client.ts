@@ -109,6 +109,26 @@ export const getProperties = async () => {
 };
 
 /**
+ * Récupère une property par son id (null si introuvable ou non accessible via RLS)
+ * @throws {Error} Si une erreur survient
+ */
+export const getProperty = async (id: string) => {
+	const { data, error } = await supabase
+		.from('properties')
+		.select('*')
+		.eq('id', id)
+		.maybeSingle();
+
+	if (error) {
+		// 22P02 = id mal formé (UUID invalide) → "introuvable", pas une erreur
+		if (error.code === '22P02') return null;
+		throw error;
+	}
+
+	return data;
+};
+
+/**
  * Crée une nouvelle property
  * @throws {Error} Si l'utilisateur n'est pas connecté ou si une erreur survient
  */
@@ -173,6 +193,26 @@ export const getProjects = async (propertyId: string) => {
 	if (error) throw error;
 
 	return data || [];
+};
+
+/**
+ * Récupère un projet par son id (null si introuvable ou non accessible via RLS)
+ * @throws {Error} Si une erreur survient
+ */
+export const getProject = async (id: string) => {
+	const { data, error } = await supabase
+		.from('projects')
+		.select('*')
+		.eq('id', id)
+		.maybeSingle();
+
+	if (error) {
+		// 22P02 = id mal formé (UUID invalide) → "introuvable", pas une erreur
+		if (error.code === '22P02') return null;
+		throw error;
+	}
+
+	return data;
 };
 
 /**

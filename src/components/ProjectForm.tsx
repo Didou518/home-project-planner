@@ -142,6 +142,10 @@ export async function action({
 			toast.success('Projet modifié avec succès', {
 				description: `Le projet "${name}" a été modifié.`,
 			});
+
+			queryClient.invalidateQueries({
+				queryKey: ['project', projectId],
+			});
 		}
 
 		queryClient.invalidateQueries({ queryKey: ['projects'] });

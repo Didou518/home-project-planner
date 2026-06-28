@@ -1,6 +1,7 @@
 import Breadcrumbs, { type Crumb } from '@/components/Breadcrumbs';
 import Heading1 from '@/components/Heading1';
 import PageTemplate from '@/components/PageTemplate';
+import PageMessage from '@/components/PageMessage';
 import { Button } from '@/components/ui/button';
 import {
 	Card,
@@ -9,40 +10,33 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card';
-import { useSelectionStore } from '@/stores/useSelectionStore';
 import { Edit, Calendar, Loader2 } from 'lucide-react';
 import { NavLink, useParams, useNavigate } from 'react-router';
-import { useEffect } from 'react';
 import { toast } from 'sonner';
-import { useProjects } from '@/hooks/useProjects';
-import { useProperties } from '@/hooks/useProperties';
+import { useProperty } from '@/hooks/useProperty';
+import { useProject } from '@/hooks/useProject';
 import { deleteProject, queryClient } from '@/integrations/supabase/client';
 import { useMutation } from '@tanstack/react-query';
 import DeleteModal from '@/components/DeleteModal';
 
 export default function ProjectPage() {
 	const { id: propertyId, projectId } = useParams();
-	const { selectedProperty, selectedProject } = useSelectionStore();
-	const { data: properties, isLoading: isPropertiesLoading } =
-		useProperties();
-	const { data: projects, isLoading: isProjectsLoading } = useProjects(
-		propertyId ?? ''
-	);
 	const navigate = useNavigate();
 
-	// Trouver la propriété depuis le store ou depuis l'URL
-	const property =
-		selectedProperty ||
-		(propertyId ? properties?.find((p) => p.id === propertyId) : null);
-
-	// Trouver le projet depuis le store ou depuis l'URL
-	const project =
-		selectedProject ||
-		(projectId ? projects?.find((p) => p.id === projectId) : null);
+	const {
+		data: property,
+		isLoading: isPropertyLoading,
+		error: propertyError,
+	} = useProperty(propertyId ?? '');
+	const {
+		data: project,
+		isLoading: isProjectLoading,
+		error: projectError,
+	} = useProject(projectId ?? '');
 
 	const { mutate: deleteProjectMutation, isPending: isDeletingProject } =
 		useMutation({
-			mutationFn: () => deleteProject(project.id),
+			mutationFn: () => deleteProject(projectId ?? ''),
 			onSuccess: () => {
 				toast.success('Projet supprimé avec succès');
 				queryClient.invalidateQueries({ queryKey: ['projects'] });
@@ -53,57 +47,45 @@ export default function ProjectPage() {
 			},
 		});
 
-	// Rediriger si pas de propriété ou projet
-	useEffect(() => {
-		if (!isPropertiesLoading && !property) {
-			toast.error('Bien non sélectionné', {
-				description:
-					'Veuillez sélectionner un bien pour voir ses projets',
-			});
-			navigate('/properties');
-			return;
-		}
-
-		if (!isProjectsLoading && !project && projectId) {
-			toast.error('Projet non trouvé', {
-				description:
-					"Le projet demandé n'existe pas ou n'est plus disponible",
-			});
-			navigate(`/properties/${propertyId}/projects`);
-		}
-	}, [
-		selectedProperty,
-		project,
-		projectId,
-		propertyId,
-		navigate,
-		isProjectsLoading,
-		isPropertiesLoading,
-		property,
-	]);
-
-	if (!selectedProperty || !project) {
-		return null;
+	if (isPropertyLoading || isProjectLoading) {
+		return <PageMessage loading />;
+	}
+	if (propertyError || projectError) {
+		return (
+			<PageMessage
+				title="Erreur de chargement"
+				description="Impossible de charger ce projet. Réessayez plus tard."
+				backTo="/properties"
+				backLabel="Voir mes biens"
+			/>
+		);
+	}
+	if (!property || !project) {
+		return (
+			<PageMessage
+				title="Projet introuvable"
+				description="Ce projet n'existe pas ou n'est plus accessible."
+				backTo={
+					property
+						? `/properties/${property.id}/projects`
+						: '/properties'
+				}
+				backLabel={property ? 'Voir les projets' : 'Voir mes biens'}
+			/>
+		);
 	}
 
 	const breadcrumbs: Crumb[] = [
 		{ label: 'Accueil', to: '/' },
-		{ label: 'Propriétés', to: '/properties' },
-		{
-			label: selectedProperty.name,
-			to: `/properties/${selectedProperty.id}`,
-		},
-		{
-			label: 'Projets',
-			to: `/properties/${selectedProperty.id}/projects`,
-		},
+		{ label: 'Biens', to: '/properties' },
+		{ label: property.name, to: `/properties/${property.id}` },
+		{ label: 'Projets', to: `/properties/${property.id}/projects` },
 		{
 			label: project.name,
-			to: `/properties/${selectedProperty.id}/projects/${project.id}`,
+			to: `/properties/${property.id}/projects/${project.id}`,
 		},
 	];
 
-	// Formater les dates
 	const formatDate = (dateString: string) => {
 		const date = new Date(dateString);
 		return date.toLocaleDateString('fr-FR', {
@@ -111,10 +93,6 @@ export default function ProjectPage() {
 			month: 'long',
 			day: 'numeric',
 		});
-	};
-
-	const handleDelete = async () => {
-		deleteProjectMutation();
 	};
 
 	return (
@@ -133,7 +111,7 @@ export default function ProjectPage() {
 						</div>
 						<div className="flex justify-between gap-2">
 							<NavLink
-								to={`/properties/${selectedProperty.id}/projects/${project.id}/edit`}
+								to={`/properties/${property.id}/projects/${project.id}/edit`}
 							>
 								<Button>
 									<Edit className="mr-2 h-4 w-4" />
@@ -146,7 +124,9 @@ export default function ProjectPage() {
 									Suppression...
 								</Button>
 							) : (
-								<DeleteModal onDelete={handleDelete} />
+								<DeleteModal
+									onDelete={() => deleteProjectMutation()}
+								/>
 							)}
 						</div>
 					</div>
@@ -172,9 +152,7 @@ export default function ProjectPage() {
 									<span className="text-muted-foreground">
 										Modifié le :
 									</span>
-									<span>
-										{formatDate(project.updated_at)}
-									</span>
+									<span>{formatDate(project.updated_at)}</span>
 								</div>
 							)}
 							<div className="pt-4 border-t">
@@ -182,10 +160,10 @@ export default function ProjectPage() {
 									Bien associé
 								</h2>
 								<NavLink
-									to={`/properties/${selectedProperty.id}`}
+									to={`/properties/${property.id}`}
 									className="text-primary hover:underline"
 								>
-									{selectedProperty.name}
+									{property.name}
 								</NavLink>
 							</div>
 						</CardContent>
