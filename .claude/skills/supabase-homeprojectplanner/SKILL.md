@@ -7,9 +7,9 @@ description: Workflow opérationnel Supabase pour HomeProjectPlanner — QUEL ou
 
 Ce skill fixe **comment** parler à Supabase sur ce projet. À lire d'abord — la réalité du projet diffère de setups plus outillés :
 
-> **Pas de serveur MCP, pas (encore) de stack Supabase locale ni de seed.** L'accès se fait via la **CLI Supabase** (`pnpx supabase …`), et le projet est **lié à un projet Supabase distant** (cf `supabase/.temp/project-ref`). Les migrations sont **poussées directement sur le distant** par `pnpm db:migrate`.
+> **Serveur MCP Supabase en place** (hébergé, OAuth — `.mcp.json`, projet `zaszqfzfghklopphzcon`). C'est le **canal principal** : Claude applique les migrations, interroge et inspecte la base via les outils `mcp__supabase__*` (`apply_migration`, `execute_sql`, `list_tables`, `list_migrations`, `get_advisors`, `generate_typescript_types`, `get_logs`…) — **sans token ni CLI sandboxée**. La **CLI** (`pnpm db:migrate`…) reste un fallback manuel. **Pas de stack locale** → on applique/teste en distant.
 
-⚠️ **Conséquence importante** : il n'y a **pas d'étape de validation locale** entre l'écriture d'une migration et son application au distant. Tu testes donc en distant. C'est le risque principal de ce workflow — voir §Risque & évolution possible.
+⚠️ **Pas de validation locale** : les migrations vont directement au projet distant. Donc : relire le SQL, appliquer via `apply_migration`, puis **lancer `get_advisors` (security + performance)** systématiquement.
 
 ## Scripts disponibles (package.json)
 
@@ -30,13 +30,13 @@ Ce skill fixe **comment** parler à Supabase sur ce projet. À lire d'abord — 
    - Pour l'accès à un bien, **réutiliser les fonctions `SECURITY DEFINER`** existantes (`can_access_property`, `is_property_owner`, `is_property_member`) plutôt qu'une sous-requête cross-table — c'est ce qui évite la récursion RLS (cf migration `..._fix_rls_recursion.sql`).
    - Idempotence : `IF NOT EXISTS` / `DROP POLICY IF EXISTS` où pertinent.
 3. **Relire** le SQL attentivement (pas de filet local). Vérifier mentalement le rejeu et les dépendances (ordre des tables, FK).
-4. **Appliquer** : `pnpm db:migrate` (push vers le distant).
+4. **Appliquer** : `mcp__supabase__apply_migration(name, query)` (canal principal) — ou `pnpm db:migrate` en fallback CLI.
 5. **Vérifier** côté Supabase (dashboard / requête) que la table et ses policies sont bien créées, RLS active, FK indexées.
 6. **Mettre à jour les types TS** : ce projet n'a **pas** de génération automatique de types — les types sont écrits à la main dans `src/types/` (`Property.ts`, `Project.ts`). Après un changement de schéma, **mets-les à jour à la main** pour rester aligné.
 
 ## Inspecter / interroger la base
 
-Pas de MCP : utilise le **dashboard Supabase** ou la CLI (`pnpx supabase …`) pour inspecter le schéma, les policies, les logs. Pour un diagnostic RLS, vérifie que la policy correspond bien au rôle (`auth.uid()`) et qu'aucune permissive ne court-circuite une restrictive.
+Via MCP : `list_tables` (schéma), `execute_sql` (SELECT de diagnostic uniquement), `get_logs`, `get_advisors`. (Dashboard / CLI en secours.) Pour un diagnostic RLS, vérifie que la policy correspond bien au rôle (`auth.uid()`) et qu'aucune permissive ne court-circuite une restrictive.
 
 ## Le client runtime (`src/integrations/supabase/client.ts`)
 
