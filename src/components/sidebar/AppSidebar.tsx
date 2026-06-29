@@ -12,7 +12,7 @@ import {
 	SidebarMenuItem,
 } from '../ui/sidebar';
 import { Button } from '../ui/button';
-import { LayoutDashboard, LogOut } from 'lucide-react';
+import { LayoutDashboard, LogOut, Users } from 'lucide-react';
 import PropertyMenu from './PropertyMenu';
 import ProjectMenu from './ProjectMenu';
 import { useProperties } from '@/hooks/useProperties';
@@ -22,6 +22,11 @@ const menuItems = [
 		label: 'Dashboard',
 		icon: LayoutDashboard,
 		to: '/',
+	},
+	{
+		label: 'Foyer',
+		icon: Users,
+		to: '/household',
 	},
 ];
 
