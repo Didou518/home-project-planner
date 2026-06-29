@@ -52,6 +52,7 @@ export default function ProjectTasks({ projectId }: { projectId: string }) {
 							<Checkbox
 								id={`task-${task.id}`}
 								checked={task.is_done}
+								className="size-5"
 								onCheckedChange={(checked) =>
 									toggleTask.mutate({
 										id: task.id,
@@ -72,7 +73,7 @@ export default function ProjectTasks({ projectId }: { projectId: string }) {
 							<Button
 								variant="ghost"
 								size="icon"
-								className="h-7 w-7 opacity-0 group-hover:opacity-100"
+								className="h-7 w-7 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
 								onClick={() => deleteTask.mutate(task.id)}
 								aria-label={`Supprimer la tâche : ${task.label}`}
 							>

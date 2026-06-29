@@ -18,7 +18,7 @@ export default function RootLayout() {
 		<>
 			<SidebarProvider>
 				<AppSidebar />
-				<main>
+				<main className="min-w-0 flex-1">
 					<Outlet />
 				</main>
 			</SidebarProvider>

@@ -56,7 +56,6 @@ export default function Auth() {
 							{isSignIn
 								? 'Connectez-vous à votre compte pour accéder à votre espace personnel.'
 								: 'Créez un compte pour accéder à votre espace personnel.'}
-							personnel.
 						</p>
 						<Button
 							type="button"

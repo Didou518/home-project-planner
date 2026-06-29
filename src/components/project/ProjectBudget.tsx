@@ -62,7 +62,8 @@ function ExpenseDevis({
 						onClick={openDevis}
 						title={file.name}
 					>
-						<Paperclip className="h-3.5 w-3.5" /> devis
+						<Paperclip className="h-3.5 w-3.5" />{' '}
+						<span className="hidden sm:inline">devis</span>
 					</Button>
 					<Button
 						variant="ghost"
@@ -81,7 +82,8 @@ function ExpenseDevis({
 					className="h-7 gap-1 px-2 text-muted-foreground"
 					onClick={() => ref.current?.click()}
 				>
-					<Paperclip className="h-3.5 w-3.5" /> devis
+					<Paperclip className="h-3.5 w-3.5" />{' '}
+						<span className="hidden sm:inline">devis</span>
 				</Button>
 			)}
 		</span>
@@ -229,15 +231,17 @@ export default function ProjectBudget({
 					{expenses.map((exp) => (
 						<li
 							key={exp.id}
-							className="group flex items-center gap-3 px-3 py-2 text-sm"
+							className="group flex items-center gap-2 px-3 py-2 text-sm sm:gap-3"
 						>
-							<span className="w-24 shrink-0 text-muted-foreground">
+							<span className="w-16 shrink-0 text-xs text-muted-foreground sm:w-24 sm:text-sm">
 								{new Date(exp.spent_at).toLocaleDateString(
 									'fr-FR'
 								)}
 							</span>
-							<span className="flex-1">{exp.label}</span>
-							<span className="font-medium">
+							<span className="min-w-0 flex-1 truncate">
+								{exp.label}
+							</span>
+							<span className="shrink-0 whitespace-nowrap font-medium">
 								{formatEuro(Number(exp.amount))}
 							</span>
 							<ExpenseDevis
@@ -254,7 +258,7 @@ export default function ProjectBudget({
 							<Button
 								variant="ghost"
 								size="icon"
-								className="h-7 w-7 opacity-0 group-hover:opacity-100"
+								className="h-7 w-7 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
 								onClick={() => deleteExpense.mutate(exp.id)}
 								aria-label={`Supprimer la dépense : ${exp.label}`}
 							>
@@ -269,7 +273,10 @@ export default function ProjectBudget({
 				</p>
 			)}
 
-			<form onSubmit={addRow} className="flex flex-wrap items-end gap-2">
+			<form
+					onSubmit={addRow}
+					className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-2"
+				>
 				<div className="space-y-1">
 					<Label htmlFor="exp-date">Date</Label>
 					<Input
@@ -277,7 +284,7 @@ export default function ProjectBudget({
 						type="date"
 						value={spentAt}
 						onChange={(e) => setSpentAt(e.target.value)}
-						className="w-40"
+						className="w-full sm:w-40"
 					/>
 				</div>
 				<div className="min-w-[160px] flex-1 space-y-1">
@@ -298,18 +305,22 @@ export default function ProjectBudget({
 						step="0.01"
 						value={amount}
 						onChange={(e) => setAmount(e.target.value)}
-						className="w-32"
+						className="w-full sm:w-32"
 						placeholder="0,00"
 					/>
 				</div>
-				<Button type="submit" disabled={addExpense.isPending}>
-					{addExpense.isPending ? (
-						<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-					) : (
-						<Plus className="mr-2 h-4 w-4" />
-					)}
-					Ajouter
-				</Button>
+				<Button
+						type="submit"
+						disabled={addExpense.isPending}
+						className="w-full sm:w-auto"
+					>
+						{addExpense.isPending ? (
+							<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+						) : (
+							<Plus className="mr-2 h-4 w-4" />
+						)}
+						Ajouter
+					</Button>
 			</form>
 		</div>
 	);

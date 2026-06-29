@@ -12,11 +12,17 @@ import {
 import { Button } from './ui/button';
 import { Trash2 } from 'lucide-react';
 
-export default function DeleteModal({ onDelete }: { onDelete: () => void }) {
+export default function DeleteModal({
+	onDelete,
+	className,
+}: {
+	onDelete: () => void;
+	className?: string;
+}) {
 	return (
 		<AlertDialog>
 			<AlertDialogTrigger asChild>
-				<Button variant="destructive">
+				<Button variant="destructive" className={className}>
 					<Trash2 /> Supprimer
 				</Button>
 			</AlertDialogTrigger>

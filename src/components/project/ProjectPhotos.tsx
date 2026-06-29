@@ -99,7 +99,7 @@ export default function ProjectPhotos({ projectId }: { projectId: string }) {
 							<Button
 								variant="destructive"
 								size="icon"
-								className="absolute right-1 top-1 h-7 w-7 opacity-0 group-hover:opacity-100"
+								className="absolute right-1 top-1 h-7 w-7 opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
 								onClick={() => deleteFile.mutate(file)}
 								aria-label={`Supprimer la photo : ${file.name}`}
 							>

@@ -3,5 +3,7 @@ export default function PageTemplate({
 }: {
 	children: React.ReactNode;
 }) {
-	return <div className="py-4 px-11 w-full">{children}</div>;
+	return (
+		<div className="w-full px-4 py-4 sm:px-8 lg:px-11">{children}</div>
+	);
 }

@@ -32,7 +32,7 @@ function KpiCard({
 	value: string;
 }) {
 	return (
-		<Card>
+		<Card className="py-4">
 			<CardHeader className="pb-2">
 				<div className="flex items-center gap-2 text-muted-foreground">
 					{icon}
