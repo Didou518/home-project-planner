@@ -89,25 +89,30 @@ export default function PropertyPage() {
 			<Breadcrumbs crumbs={breadcrumbs} />
 			<PageTemplate>
 				<div className="flex flex-col gap-6">
-					<div className="flex items-start justify-between">
-						<div>
-							<Heading1>{property.name}</Heading1>
-						</div>
-						<div className="flex justify-between gap-2">
-							<NavLink to={`/properties/${property.id}/edit`}>
-								<Button>
+					<div className="flex flex-wrap items-start justify-between gap-4">
+						<Heading1>{property.name}</Heading1>
+						<div className="flex w-full gap-2 sm:w-auto">
+							<NavLink
+								to={`/properties/${property.id}/edit`}
+								className="flex-1 sm:flex-none"
+							>
+								<Button className="w-full">
 									<Edit className="mr-2 h-4 w-4" />
 									Éditer le bien
 								</Button>
 							</NavLink>
 							{isDeletingProperty ? (
-								<Button disabled>
+								<Button
+									disabled
+									className="flex-1 sm:flex-none"
+								>
 									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 									Suppression...
 								</Button>
 							) : (
 								<DeleteModal
 									onDelete={() => deletePropertyMutation()}
+									className="flex-1 sm:flex-none"
 								/>
 							)}
 						</div>
