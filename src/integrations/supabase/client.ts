@@ -220,7 +220,7 @@ export const getProject = async (id: string) => {
  * @throws {Error} Si une erreur survient
  */
 export const createProject = async (
-	project: Omit<Project, 'id' | 'created_at' | 'updated_at'>
+	project: Omit<Project, 'id' | 'created_at' | 'updated_at' | 'status'>
 ) => {
 	const { data, error } = await supabase
 		.from('projects')
@@ -256,6 +256,73 @@ export const updateProject = async (id: string, updates: Partial<Project>) => {
  */
 export const deleteProject = async (id: string) => {
 	const { error } = await supabase.from('projects').delete().eq('id', id);
+
+	if (error) throw error;
+};
+
+/**
+ * Récupère les tâches d'un projet (triées par position puis date)
+ * @throws {Error} Si une erreur survient
+ */
+export const getProjectTasks = async (projectId: string) => {
+	const { data, error } = await supabase
+		.from('project_tasks')
+		.select('*')
+		.eq('project_id', projectId)
+		.order('position', { ascending: true })
+		.order('created_at', { ascending: true });
+
+	if (error) throw error;
+
+	return data || [];
+};
+
+/**
+ * Crée une tâche dans un projet
+ * @throws {Error} Si une erreur survient
+ */
+export const createProjectTask = async (
+	projectId: string,
+	label: string,
+	position = 0
+) => {
+	const { data, error } = await supabase
+		.from('project_tasks')
+		.insert([{ project_id: projectId, label, position }])
+		.select()
+		.single();
+
+	if (error) throw error;
+
+	return data;
+};
+
+/**
+ * Coche / décoche une tâche
+ * @throws {Error} Si une erreur survient
+ */
+export const setProjectTaskDone = async (id: string, isDone: boolean) => {
+	const { data, error } = await supabase
+		.from('project_tasks')
+		.update({ is_done: isDone })
+		.eq('id', id)
+		.select()
+		.single();
+
+	if (error) throw error;
+
+	return data;
+};
+
+/**
+ * Supprime une tâche
+ * @throws {Error} Si une erreur survient
+ */
+export const deleteProjectTask = async (id: string) => {
+	const { error } = await supabase
+		.from('project_tasks')
+		.delete()
+		.eq('id', id);
 
 	if (error) throw error;
 };
