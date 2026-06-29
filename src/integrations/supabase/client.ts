@@ -70,6 +70,18 @@ export const signUpWithPassword = async ({
 };
 
 /**
+ * Connexion / inscription via Google (OAuth). Redirige le navigateur vers
+ * Google puis revient sur l'origine courante (doit être dans les Redirect URLs Supabase).
+ */
+export const signInWithGoogle = async () => {
+	const { error } = await supabase.auth.signInWithOAuth({
+		provider: 'google',
+		options: { redirectTo: window.location.origin },
+	});
+	if (error) throw error;
+};
+
+/**
  * Déconnecte l'utilisateur actuel
  */
 export const signOut = async () => {
