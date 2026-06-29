@@ -99,10 +99,11 @@ export const getProperties = async () => {
 		throw new Error('User not found');
 	}
 
+	// Pas de filtre owner_id : la RLS renvoie les biens accessibles
+	// (propriétaire OU membre OU même foyer). Cf migration household_sharing.
 	const { data, error } = await supabase
 		.from('properties')
 		.select('*')
-		.eq('owner_id', user.id)
 		.order('created_at', { ascending: false });
 
 	if (error) throw error;
@@ -488,5 +489,32 @@ export const deleteProjectFile = async (file: { id: string; path: string }) => {
 		.delete()
 		.eq('id', file.id);
 
+	if (error) throw error;
+};
+
+/**
+ * Foyer (partage entre comptes) — via RPCs SECURITY DEFINER.
+ */
+export const getHouseholdMembers = async () => {
+	const { data, error } = await supabase.rpc('get_household_members');
+	if (error) throw error;
+	return data || [];
+};
+
+export const createHouseholdInvite = async () => {
+	const { data, error } = await supabase.rpc('create_household_invite');
+	if (error) throw error;
+	return data as string;
+};
+
+export const redeemHouseholdInvite = async (code: string) => {
+	const { error } = await supabase.rpc('redeem_household_invite', {
+		invite_code: code,
+	});
+	if (error) throw error;
+};
+
+export const leaveHousehold = async () => {
+	const { error } = await supabase.rpc('leave_household');
 	if (error) throw error;
 };
