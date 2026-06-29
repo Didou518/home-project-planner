@@ -28,4 +28,12 @@ export default defineConfig([
 			],
 		},
 	},
+	{
+		// Composants shadcn/ui générés : ils exportent aussi des variantes
+		// (buttonVariants…) / hooks à côté des composants — pattern voulu.
+		files: ['src/components/ui/**'],
+		rules: {
+			'react-refresh/only-export-components': 'off',
+		},
+	},
 ]);
