@@ -20,18 +20,27 @@ export default function Breadcrumbs({ crumbs }: { crumbs: Crumb[] }) {
 			<SidebarTrigger />
 			<Breadcrumb>
 				<BreadcrumbList>
-					{crumbs.map((crumb, index) => (
-						<Fragment key={index}>
-							{index !== 0 && <BreadcrumbSeparator />}
-							<BreadcrumbItem>
-								<BreadcrumbLink asChild>
-									<NavLink to={crumb.to}>
-										{crumb.label}
-									</NavLink>
-								</BreadcrumbLink>
-							</BreadcrumbItem>
-						</Fragment>
-					))}
+					{crumbs.map((crumb, index) => {
+						// Sur mobile : on ne montre que la page courante (le dernier
+						// niveau), sinon le fil d'Ariane déborde. Complet en ≥ sm.
+						const isLast = index === crumbs.length - 1;
+						return (
+							<Fragment key={index}>
+								{index !== 0 && (
+									<BreadcrumbSeparator className="hidden sm:flex" />
+								)}
+								<BreadcrumbItem
+									className={isLast ? '' : 'hidden sm:flex'}
+								>
+									<BreadcrumbLink asChild>
+										<NavLink to={crumb.to}>
+											{crumb.label}
+										</NavLink>
+									</BreadcrumbLink>
+								</BreadcrumbItem>
+							</Fragment>
+						);
+					})}
 				</BreadcrumbList>
 			</Breadcrumb>
 		</div>

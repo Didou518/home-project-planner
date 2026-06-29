@@ -182,23 +182,28 @@ export default function ProjectPage() {
 								</SelectContent>
 							</Select>
 						</div>
-						<div className="flex gap-2">
+						<div className="flex w-full gap-2 sm:w-auto">
 							<NavLink
 								to={`/properties/${property.id}/projects/${project.id}/edit`}
+								className="flex-1 sm:flex-none"
 							>
-								<Button>
+								<Button className="w-full">
 									<Edit className="mr-2 h-4 w-4" />
 									Éditer le projet
 								</Button>
 							</NavLink>
 							{isDeletingProject ? (
-								<Button disabled>
+								<Button
+									disabled
+									className="flex-1 sm:flex-none"
+								>
 									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 									Suppression...
 								</Button>
 							) : (
 								<DeleteModal
 									onDelete={() => deleteProjectMutation()}
+									className="flex-1 sm:flex-none"
 								/>
 							)}
 						</div>
@@ -206,7 +211,7 @@ export default function ProjectPage() {
 
 					{/* Bandeau KPI — Avancement + Budget (Fichiers : M4) */}
 					<div className="grid gap-4 sm:grid-cols-2">
-						<Card>
+						<Card className="gap-2 py-4">
 							<CardHeader className="pb-2">
 								<CardDescription>Avancement</CardDescription>
 								<CardTitle className="text-2xl">
@@ -222,7 +227,7 @@ export default function ProjectPage() {
 								</p>
 							</CardContent>
 						</Card>
-						<Card>
+						<Card className="gap-2 py-4">
 							<CardHeader className="pb-2">
 								<CardDescription>Budget</CardDescription>
 								<CardTitle className="text-2xl">
@@ -253,7 +258,7 @@ export default function ProjectPage() {
 					</div>
 
 					<Tabs defaultValue="tasks">
-						<TabsList>
+						<TabsList className="grid w-full grid-cols-4">
 							<TabsTrigger value="tasks">Tâches</TabsTrigger>
 							<TabsTrigger value="budget">Budget</TabsTrigger>
 							<TabsTrigger value="files">Fichiers</TabsTrigger>
