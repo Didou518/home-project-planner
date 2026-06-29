@@ -1,44 +1,52 @@
 import Breadcrumbs, { type Crumb } from '@/components/Breadcrumbs';
 import Heading1 from '@/components/Heading1';
 import PageTemplate from '@/components/PageTemplate';
+import PageMessage from '@/components/PageMessage';
 import ProjectForm from '@/components/ProjectForm';
-import { useParams, useNavigate } from 'react-router';
-import { useSelectionStore } from '@/stores/useSelectionStore';
-import { toast } from 'sonner';
-import { useEffect } from 'react';
+import { useParams } from 'react-router';
+import { useProperty } from '@/hooks/useProperty';
 
 export default function NewProjectPage() {
 	const { id: propertyId } = useParams();
-	const { selectedProperty } = useSelectionStore();
-	const navigate = useNavigate();
+	const {
+		data: property,
+		isLoading,
+		error,
+	} = useProperty(propertyId ?? '');
 
-	useEffect(() => {
-		if (!selectedProperty && !propertyId) {
-			toast.error('Bien non sélectionné', {
-				description:
-					'Veuillez sélectionner un bien pour créer un projet',
-			});
-			navigate('/properties');
-		}
-	}, [selectedProperty, propertyId, navigate]);
+	if (isLoading) {
+		return <PageMessage loading />;
+	}
+	if (error) {
+		return (
+			<PageMessage
+				title="Erreur de chargement"
+				description="Impossible de charger ce bien. Réessayez plus tard."
+				backTo="/properties"
+				backLabel="Voir mes biens"
+			/>
+		);
+	}
+	if (!property) {
+		return (
+			<PageMessage
+				title="Bien introuvable"
+				description="Impossible de créer un projet : ce bien n'existe pas ou n'est plus accessible."
+				backTo="/properties"
+				backLabel="Voir mes biens"
+			/>
+		);
+	}
 
-	const currentPropertyId = propertyId || selectedProperty?.id;
 	const breadcrumbs: Crumb[] = [
 		{ label: 'Accueil', to: '/' },
-		{ label: 'Propriétés', to: '/properties' },
-		{
-			label: selectedProperty?.name ?? '',
-			to: `/properties/${selectedProperty?.id}`,
-		},
+		{ label: 'Biens', to: '/properties' },
+		{ label: property.name, to: `/properties/${property.id}` },
 		{
 			label: 'Nouveau projet',
-			to: `/properties/${currentPropertyId}/projects/new`,
+			to: `/properties/${property.id}/projects/new`,
 		},
 	];
-
-	if (!currentPropertyId) {
-		return null;
-	}
 
 	return (
 		<>

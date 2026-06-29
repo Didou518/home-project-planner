@@ -9,31 +9,12 @@ import {
 } from '../ui/sidebar';
 import { NotebookPen, Plus, FolderKanban } from 'lucide-react';
 import { type Property } from '@/types/Property';
-import { useSelectionStore } from '@/stores/useSelectionStore';
-import { useEffect } from 'react';
 import { useProjects } from '@/hooks/useProjects';
 
 export default function ProjectMenu({ property }: { property: Property }) {
-	const { setSelectedProject } = useSelectionStore();
 	const location = useLocation();
 
 	const { data: projects, isLoading } = useProjects(property.id);
-
-	// Détecter automatiquement le projet depuis l'URL
-	useEffect(() => {
-		if (isLoading && projects) {
-			const pathMatch = location.pathname.match(
-				/\/properties\/[^/]+\/projects\/([^/]+)/
-			);
-			if (pathMatch && pathMatch[1] && pathMatch[1] !== 'new') {
-				const projectId = pathMatch[1];
-				const project = projects.find((p) => p.id === projectId);
-				if (project) {
-					setSelectedProject(project);
-				}
-			}
-		}
-	}, [location.pathname, projects, setSelectedProject, isLoading]);
 
 	return (
 		<SidebarGroup>
@@ -77,9 +58,6 @@ export default function ProjectMenu({ property }: { property: Property }) {
 									>
 										<NavLink
 											to={`/properties/${property.id}/projects/${project.id}`}
-											onClick={() =>
-												setSelectedProject(project)
-											}
 										>
 											<FolderKanban className="h-4 w-4" />
 											<span className="truncate">

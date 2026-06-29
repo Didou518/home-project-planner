@@ -13,7 +13,11 @@ export default function HomePage() {
 			<PageTemplate>
 				<section className={styles.home}>
 					<Heading1>Home Project Planner</Heading1>
-					<p>Ha ci bo</p>
+					<p className="text-muted-foreground">
+						Suivez l'avancement et le budget des projets de vos
+						biens. Sélectionnez un bien dans le menu, ou créez-en un
+						pour commencer.
+					</p>
 				</section>
 			</PageTemplate>
 		</>

@@ -13,10 +13,8 @@ import {
 } from '../ui/sidebar';
 import { Button } from '../ui/button';
 import { LayoutDashboard, LogOut } from 'lucide-react';
-import { useEffect } from 'react';
 import PropertyMenu from './PropertyMenu';
 import ProjectMenu from './ProjectMenu';
-import { useSelectionStore } from '@/stores/useSelectionStore';
 import { useProperties } from '@/hooks/useProperties';
 
 const menuItems = [
@@ -28,32 +26,18 @@ const menuItems = [
 ];
 
 export default function AppSidebar() {
-	const { selectedProperty, setSelectedProperty } = useSelectionStore();
 	const location = useLocation();
 
 	const { data: properties, isLoading: isPropertiesLoading } =
 		useProperties();
 
-	// Détecter automatiquement la propriété depuis l'URL et charger les projets
-	useEffect(() => {
-		if (!isPropertiesLoading && properties) {
-			const pathMatch = location.pathname.match(/\/properties\/([^/]+)/);
-			if (pathMatch && pathMatch[1] && pathMatch[1] !== 'new') {
-				const propertyId = pathMatch[1];
-				const property = properties.find((p) => p.id === propertyId);
-
-				if (property && property.id !== selectedProperty?.id) {
-					setSelectedProperty(property);
-				}
-			}
-		}
-	}, [
-		location.pathname,
-		properties,
-		selectedProperty,
-		setSelectedProperty,
-		isPropertiesLoading,
-	]);
+	// Bien actif dérivé de l'URL (source de vérité) — pas de store.
+	const pathMatch = location.pathname.match(/\/properties\/([^/]+)/);
+	const activePropertyId =
+		pathMatch && pathMatch[1] !== 'new' ? pathMatch[1] : undefined;
+	const activeProperty = activePropertyId
+		? properties?.find((p) => p.id === activePropertyId)
+		: undefined;
 
 	return (
 		<>
@@ -80,8 +64,8 @@ export default function AppSidebar() {
 					{!isPropertiesLoading && properties && (
 						<PropertyMenu properties={properties} />
 					)}
-					{selectedProperty && (
-						<ProjectMenu property={selectedProperty} />
+					{activeProperty && (
+						<ProjectMenu property={activeProperty} />
 					)}
 				</SidebarContent>
 				<SidebarFooter>

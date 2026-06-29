@@ -6,17 +6,15 @@ import { isRouteErrorResponse, NavLink, useRouteError } from 'react-router';
 export default function ErrorPage() {
 	const error = useRouteError();
 
-	let title = 'An error occurred!';
-	let message = 'Something went wrong!';
+	let title = 'Une erreur est survenue';
+	let message = 'Quelque chose s’est mal passé.';
 
 	if (isRouteErrorResponse(error)) {
-		if (error.status === 500) {
-			message = error.data.message;
-		}
-
 		if (error.status === 404) {
-			title = 'Not found!';
-			message = 'Could not find resource or page.';
+			title = 'Introuvable';
+			message = 'Cette page ou cette ressource n’existe pas.';
+		} else if (error.data?.message) {
+			message = error.data.message;
 		}
 	}
 
@@ -29,7 +27,7 @@ export default function ErrorPage() {
 					<p>{message}</p>
 					<NavLink to="/" className="flex items-center gap-2">
 						<Home />
-						Go home
+						Retour à l'accueil
 					</NavLink>
 				</section>
 			</PageTemplate>

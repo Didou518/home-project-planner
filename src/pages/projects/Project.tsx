@@ -1,6 +1,8 @@
 import Breadcrumbs, { type Crumb } from '@/components/Breadcrumbs';
 import Heading1 from '@/components/Heading1';
 import PageTemplate from '@/components/PageTemplate';
+import PageMessage from '@/components/PageMessage';
+import ProjectTasks from '@/components/project/ProjectTasks';
 import { Button } from '@/components/ui/button';
 import {
 	Card,
@@ -9,40 +11,62 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card';
-import { useSelectionStore } from '@/stores/useSelectionStore';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
 import { Edit, Calendar, Loader2 } from 'lucide-react';
 import { NavLink, useParams, useNavigate } from 'react-router';
-import { useEffect } from 'react';
 import { toast } from 'sonner';
-import { useProjects } from '@/hooks/useProjects';
-import { useProperties } from '@/hooks/useProperties';
-import { deleteProject, queryClient } from '@/integrations/supabase/client';
+import { useProperty } from '@/hooks/useProperty';
+import { useProject } from '@/hooks/useProject';
+import { useProjectTasks } from '@/hooks/useProjectTasks';
+import {
+	deleteProject,
+	updateProject,
+	queryClient,
+} from '@/integrations/supabase/client';
 import { useMutation } from '@tanstack/react-query';
 import DeleteModal from '@/components/DeleteModal';
+import ProjectBudget from '@/components/project/ProjectBudget';
+import ProjectPhotos from '@/components/project/ProjectPhotos';
+import { useProjectExpenses } from '@/hooks/useProjectExpenses';
+import { formatEuro } from '@/lib/utils';
+import type { ProjectStatus } from '@/types/Project';
+import type { ProjectTask } from '@/types/ProjectTask';
+import type { ProjectExpense } from '@/types/ProjectExpense';
+
+const STATUS_LABELS: Record<ProjectStatus, string> = {
+	todo: 'À faire',
+	in_progress: 'En cours',
+	done: 'Terminé',
+};
 
 export default function ProjectPage() {
 	const { id: propertyId, projectId } = useParams();
-	const { selectedProperty, selectedProject } = useSelectionStore();
-	const { data: properties, isLoading: isPropertiesLoading } =
-		useProperties();
-	const { data: projects, isLoading: isProjectsLoading } = useProjects(
-		propertyId ?? ''
-	);
 	const navigate = useNavigate();
 
-	// Trouver la propriété depuis le store ou depuis l'URL
-	const property =
-		selectedProperty ||
-		(propertyId ? properties?.find((p) => p.id === propertyId) : null);
-
-	// Trouver le projet depuis le store ou depuis l'URL
-	const project =
-		selectedProject ||
-		(projectId ? projects?.find((p) => p.id === projectId) : null);
+	const {
+		data: property,
+		isLoading: isPropertyLoading,
+		error: propertyError,
+	} = useProperty(propertyId ?? '');
+	const {
+		data: project,
+		isLoading: isProjectLoading,
+		error: projectError,
+	} = useProject(projectId ?? '');
+	const { data: tasksData } = useProjectTasks(projectId ?? '');
+	const { data: expensesData } = useProjectExpenses(projectId ?? '');
 
 	const { mutate: deleteProjectMutation, isPending: isDeletingProject } =
 		useMutation({
-			mutationFn: () => deleteProject(project.id),
+			mutationFn: () => deleteProject(projectId ?? ''),
 			onSuccess: () => {
 				toast.success('Projet supprimé avec succès');
 				queryClient.invalidateQueries({ queryKey: ['projects'] });
@@ -53,57 +77,67 @@ export default function ProjectPage() {
 			},
 		});
 
-	// Rediriger si pas de propriété ou projet
-	useEffect(() => {
-		if (!isPropertiesLoading && !property) {
-			toast.error('Bien non sélectionné', {
-				description:
-					'Veuillez sélectionner un bien pour voir ses projets',
+	const statusMutation = useMutation({
+		mutationFn: (status: ProjectStatus) =>
+			updateProject(projectId ?? '', { status }),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+			queryClient.invalidateQueries({
+				queryKey: ['projects', propertyId],
 			});
-			navigate('/properties');
-			return;
-		}
+		},
+		onError: () => toast.error('Impossible de changer le statut'),
+	});
 
-		if (!isProjectsLoading && !project && projectId) {
-			toast.error('Projet non trouvé', {
-				description:
-					"Le projet demandé n'existe pas ou n'est plus disponible",
-			});
-			navigate(`/properties/${propertyId}/projects`);
-		}
-	}, [
-		selectedProperty,
-		project,
-		projectId,
-		propertyId,
-		navigate,
-		isProjectsLoading,
-		isPropertiesLoading,
-		property,
-	]);
-
-	if (!selectedProperty || !project) {
-		return null;
+	if (isPropertyLoading || isProjectLoading) {
+		return <PageMessage loading />;
+	}
+	if (propertyError || projectError) {
+		return (
+			<PageMessage
+				title="Erreur de chargement"
+				description="Impossible de charger ce projet. Réessayez plus tard."
+				backTo="/properties"
+				backLabel="Voir mes biens"
+			/>
+		);
+	}
+	if (!property || !project) {
+		return (
+			<PageMessage
+				title="Projet introuvable"
+				description="Ce projet n'existe pas ou n'est plus accessible."
+				backTo={
+					property
+						? `/properties/${property.id}/projects`
+						: '/properties'
+				}
+				backLabel={property ? 'Voir les projets' : 'Voir mes biens'}
+			/>
+		);
 	}
 
 	const breadcrumbs: Crumb[] = [
 		{ label: 'Accueil', to: '/' },
-		{ label: 'Propriétés', to: '/properties' },
-		{
-			label: selectedProperty.name,
-			to: `/properties/${selectedProperty.id}`,
-		},
-		{
-			label: 'Projets',
-			to: `/properties/${selectedProperty.id}/projects`,
-		},
+		{ label: 'Biens', to: '/properties' },
+		{ label: property.name, to: `/properties/${property.id}` },
+		{ label: 'Projets', to: `/properties/${property.id}/projects` },
 		{
 			label: project.name,
-			to: `/properties/${selectedProperty.id}/projects/${project.id}`,
+			to: `/properties/${property.id}/projects/${project.id}`,
 		},
 	];
 
-	// Formater les dates
+	const tasks = (tasksData ?? []) as ProjectTask[];
+	const doneCount = tasks.filter((t) => t.is_done).length;
+	const totalCount = tasks.length;
+	const pct = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
+
+	const expenses = (expensesData ?? []) as ProjectExpense[];
+	const spent = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+	const budgetValue = project.budget == null ? null : Number(project.budget);
+	const remaining = budgetValue != null ? budgetValue - spent : null;
+
 	const formatDate = (dateString: string) => {
 		const date = new Date(dateString);
 		return date.toLocaleDateString('fr-FR', {
@@ -113,27 +147,44 @@ export default function ProjectPage() {
 		});
 	};
 
-	const handleDelete = async () => {
-		deleteProjectMutation();
-	};
-
 	return (
 		<>
 			<Breadcrumbs crumbs={breadcrumbs} />
 			<PageTemplate>
 				<div className="flex flex-col gap-6">
-					<div className="flex items-start justify-between">
-						<div>
+					<div className="flex flex-wrap items-start justify-between gap-4">
+						<div className="space-y-2">
 							<Heading1>{project.name}</Heading1>
 							{project.description && (
-								<p className="mt-2 text-muted-foreground">
+								<p className="text-muted-foreground">
 									{project.description}
 								</p>
 							)}
+							<Select
+								value={project.status}
+								onValueChange={(v) =>
+									statusMutation.mutate(v as ProjectStatus)
+								}
+							>
+								<SelectTrigger className="w-[160px]">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{(
+										Object.keys(
+											STATUS_LABELS
+										) as ProjectStatus[]
+									).map((s) => (
+										<SelectItem key={s} value={s}>
+											{STATUS_LABELS[s]}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
 						</div>
-						<div className="flex justify-between gap-2">
+						<div className="flex gap-2">
 							<NavLink
-								to={`/properties/${selectedProperty.id}/projects/${project.id}/edit`}
+								to={`/properties/${property.id}/projects/${project.id}/edit`}
 							>
 								<Button>
 									<Edit className="mr-2 h-4 w-4" />
@@ -146,50 +197,122 @@ export default function ProjectPage() {
 									Suppression...
 								</Button>
 							) : (
-								<DeleteModal onDelete={handleDelete} />
+								<DeleteModal
+									onDelete={() => deleteProjectMutation()}
+								/>
 							)}
 						</div>
 					</div>
 
-					<Card>
-						<CardHeader>
-							<CardTitle>Informations du projet</CardTitle>
-							<CardDescription>
-								Détails et métadonnées du projet
-							</CardDescription>
-						</CardHeader>
-						<CardContent className="space-y-4">
-							<div className="flex items-center gap-2 text-sm">
-								<Calendar className="h-4 w-4 text-muted-foreground" />
-								<span className="text-muted-foreground">
-									Créé le :
-								</span>
-								<span>{formatDate(project.created_at)}</span>
-							</div>
-							{project.updated_at !== project.created_at && (
-								<div className="flex items-center gap-2 text-sm">
-									<Calendar className="h-4 w-4 text-muted-foreground" />
-									<span className="text-muted-foreground">
-										Modifié le :
-									</span>
-									<span>
-										{formatDate(project.updated_at)}
-									</span>
-								</div>
-							)}
-							<div className="pt-4 border-t">
-								<h2 className="text-base font-bold mb-2">
-									Bien associé
-								</h2>
-								<NavLink
-									to={`/properties/${selectedProperty.id}`}
-									className="text-primary hover:underline"
-								>
-									{selectedProperty.name}
-								</NavLink>
-							</div>
-						</CardContent>
-					</Card>
+					{/* Bandeau KPI — Avancement + Budget (Fichiers : M4) */}
+					<div className="grid gap-4 sm:grid-cols-2">
+						<Card>
+							<CardHeader className="pb-2">
+								<CardDescription>Avancement</CardDescription>
+								<CardTitle className="text-2xl">
+									{pct}%
+								</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<Progress value={pct} />
+								<p className="mt-2 text-sm text-muted-foreground">
+									{doneCount} / {totalCount} tâche
+									{totalCount > 1 ? 's' : ''} terminée
+									{doneCount > 1 ? 's' : ''}
+								</p>
+							</CardContent>
+						</Card>
+						<Card>
+							<CardHeader className="pb-2">
+								<CardDescription>Budget</CardDescription>
+								<CardTitle className="text-2xl">
+									{formatEuro(spent)}
+								</CardTitle>
+							</CardHeader>
+							<CardContent>
+								{budgetValue != null && remaining != null ? (
+									<p className="text-sm text-muted-foreground">
+										sur {formatEuro(budgetValue)} · reste{' '}
+										<span
+											className={
+												remaining < 0
+													? 'font-medium text-destructive'
+													: 'font-medium text-green-600'
+											}
+										>
+											{formatEuro(remaining)}
+										</span>
+									</p>
+								) : (
+									<p className="text-sm text-muted-foreground">
+										Aucun budget défini
+									</p>
+								)}
+							</CardContent>
+						</Card>
+					</div>
+
+					<Tabs defaultValue="tasks">
+						<TabsList>
+							<TabsTrigger value="tasks">Tâches</TabsTrigger>
+							<TabsTrigger value="budget">Budget</TabsTrigger>
+							<TabsTrigger value="files">Fichiers</TabsTrigger>
+							<TabsTrigger value="infos">Infos</TabsTrigger>
+						</TabsList>
+						<TabsContent value="tasks" className="pt-4">
+							<ProjectTasks projectId={project.id} />
+						</TabsContent>
+						<TabsContent value="budget" className="pt-4">
+							<ProjectBudget
+								projectId={project.id}
+								budget={project.budget}
+							/>
+						</TabsContent>
+						<TabsContent value="files" className="pt-4">
+							<ProjectPhotos projectId={project.id} />
+						</TabsContent>
+						<TabsContent value="infos" className="pt-4">
+							<Card>
+								<CardHeader>
+									<CardTitle>Informations</CardTitle>
+								</CardHeader>
+								<CardContent className="space-y-4">
+									<div className="flex items-center gap-2 text-sm">
+										<Calendar className="h-4 w-4 text-muted-foreground" />
+										<span className="text-muted-foreground">
+											Créé le :
+										</span>
+										<span>
+											{formatDate(project.created_at)}
+										</span>
+									</div>
+									{project.updated_at !==
+										project.created_at && (
+										<div className="flex items-center gap-2 text-sm">
+											<Calendar className="h-4 w-4 text-muted-foreground" />
+											<span className="text-muted-foreground">
+												Modifié le :
+											</span>
+											<span>
+												{formatDate(project.updated_at)}
+											</span>
+										</div>
+									)}
+									<div className="border-t pt-4">
+										<h2 className="mb-2 text-base font-bold">
+											Bien associé
+										</h2>
+										<NavLink
+											to={`/properties/${property.id}`}
+											className="text-primary hover:underline"
+										>
+											{property.name}
+										</NavLink>
+									</div>
+								</CardContent>
+							</Card>
+						</TabsContent>
+					</Tabs>
 				</div>
 			</PageTemplate>
 		</>

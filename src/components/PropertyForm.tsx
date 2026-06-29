@@ -124,6 +124,10 @@ export async function action({
 			toast.success('Bien modifié avec succès', {
 				description: `Le bien "${name}" a été modifié.`,
 			});
+
+			queryClient.invalidateQueries({
+				queryKey: ['property', id],
+			});
 		}
 
 		queryClient.invalidateQueries({ queryKey: ['properties'] });

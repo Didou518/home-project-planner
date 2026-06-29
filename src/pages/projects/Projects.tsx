@@ -1,6 +1,7 @@
 import Breadcrumbs, { type Crumb } from '@/components/Breadcrumbs';
 import Heading1 from '@/components/Heading1';
 import PageTemplate from '@/components/PageTemplate';
+import PageMessage from '@/components/PageMessage';
 import {
 	Card,
 	CardContent,
@@ -9,43 +10,54 @@ import {
 	CardDescription,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useSelectionStore } from '@/stores/useSelectionStore';
 import { Plus, FolderKanban } from 'lucide-react';
-import { NavLink, useNavigate } from 'react-router';
-import { toast } from 'sonner';
+import { NavLink, useParams } from 'react-router';
 import { useProjects } from '@/hooks/useProjects';
+import { useProperty } from '@/hooks/useProperty';
 
 export default function ProjectsPage() {
-	const { selectedProperty, setSelectedProject } = useSelectionStore();
-	const { data: projects, isLoading } = useProjects(
-		selectedProperty?.id ?? ''
-	);
-	const navigate = useNavigate();
+	const { id: propertyId } = useParams();
+	const {
+		data: property,
+		isLoading: isPropertyLoading,
+		error: propertyError,
+	} = useProperty(propertyId ?? '');
+	const {
+		data: projects,
+		isLoading: isProjectsLoading,
+		error: projectsError,
+	} = useProjects(propertyId ?? '');
 
-	if (!selectedProperty) {
-		toast.error('Bien non sélectionné', {
-			description: 'Veuillez sélectionner un bien pour voir ses projets',
-		});
-		navigate('/properties');
-		return;
+	if (isPropertyLoading) {
+		return <PageMessage loading />;
+	}
+	if (propertyError || projectsError) {
+		return (
+			<PageMessage
+				title="Erreur de chargement"
+				description="Impossible de charger ce bien et ses projets. Réessayez plus tard."
+				backTo="/properties"
+				backLabel="Voir mes biens"
+			/>
+		);
+	}
+	if (!property) {
+		return (
+			<PageMessage
+				title="Bien introuvable"
+				description="Ce bien n'existe pas ou n'est plus accessible."
+				backTo="/properties"
+				backLabel="Voir mes biens"
+			/>
+		);
 	}
 
 	const breadcrumbs: Crumb[] = [
 		{ label: 'Accueil', to: '/' },
-		{ label: 'Propriétés', to: '/properties' },
-		{
-			label: selectedProperty?.name ?? '',
-			to: `/properties/${selectedProperty?.id}`,
-		},
-		{
-			label: 'Projets',
-			to: `/properties/${selectedProperty?.id}/projects`,
-		},
+		{ label: 'Biens', to: '/properties' },
+		{ label: property.name, to: `/properties/${property.id}` },
+		{ label: 'Projets', to: `/properties/${property.id}/projects` },
 	];
-
-	if (!selectedProperty) {
-		return null;
-	}
 
 	return (
 		<>
@@ -55,7 +67,7 @@ export default function ProjectsPage() {
 					<div className="flex items-start justify-between">
 						<Heading1>Mes Projets</Heading1>
 						<NavLink
-							to={`/properties/${selectedProperty?.id}/projects/new`}
+							to={`/properties/${property.id}/projects/new`}
 						>
 							<Button>
 								<Plus className="mr-2 h-4 w-4" />
@@ -64,15 +76,14 @@ export default function ProjectsPage() {
 						</NavLink>
 					</div>
 
-					{isLoading ? (
+					{isProjectsLoading ? (
 						<p className="mt-8">Chargement...</p>
 					) : (
 						<Card>
 							<CardHeader>
 								<CardTitle>Liste des projets</CardTitle>
 								<CardDescription>
-									Projets associés au bien "
-									{selectedProperty?.name}"
+									Projets associés au bien "{property.name}"
 								</CardDescription>
 							</CardHeader>
 							<CardContent>
@@ -81,13 +92,8 @@ export default function ProjectsPage() {
 										{projects.map((project) => (
 											<li key={project.id}>
 												<NavLink
-													to={`/properties/${selectedProperty?.id}/projects/${project.id}`}
+													to={`/properties/${property.id}/projects/${project.id}`}
 													className="block"
-													onClick={() =>
-														setSelectedProject(
-															project
-														)
-													}
 												>
 													<Card className="hover:bg-accent transition-colors cursor-pointer">
 														<CardHeader>
