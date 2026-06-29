@@ -33,8 +33,12 @@ import {
 } from '@/integrations/supabase/client';
 import { useMutation } from '@tanstack/react-query';
 import DeleteModal from '@/components/DeleteModal';
+import ProjectBudget from '@/components/project/ProjectBudget';
+import { useProjectExpenses } from '@/hooks/useProjectExpenses';
+import { formatEuro } from '@/lib/utils';
 import type { ProjectStatus } from '@/types/Project';
 import type { ProjectTask } from '@/types/ProjectTask';
+import type { ProjectExpense } from '@/types/ProjectExpense';
 
 const STATUS_LABELS: Record<ProjectStatus, string> = {
 	todo: 'À faire',
@@ -57,6 +61,7 @@ export default function ProjectPage() {
 		error: projectError,
 	} = useProject(projectId ?? '');
 	const { data: tasksData } = useProjectTasks(projectId ?? '');
+	const { data: expensesData } = useProjectExpenses(projectId ?? '');
 
 	const { mutate: deleteProjectMutation, isPending: isDeletingProject } =
 		useMutation({
@@ -127,6 +132,11 @@ export default function ProjectPage() {
 	const totalCount = tasks.length;
 	const pct = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
 
+	const expenses = (expensesData ?? []) as ProjectExpense[];
+	const spent = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+	const budgetValue = project.budget == null ? null : Number(project.budget);
+	const remaining = budgetValue != null ? budgetValue - spent : null;
+
 	const formatDate = (dateString: string) => {
 		const date = new Date(dateString);
 		return date.toLocaleDateString('fr-FR', {
@@ -193,29 +203,68 @@ export default function ProjectPage() {
 						</div>
 					</div>
 
-					{/* Bandeau KPI — Avancement (Budget/Fichiers : M3/M4) */}
-					<Card>
-						<CardHeader className="pb-2">
-							<CardDescription>Avancement</CardDescription>
-							<CardTitle className="text-2xl">{pct}%</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<Progress value={pct} />
-							<p className="mt-2 text-sm text-muted-foreground">
-								{doneCount} / {totalCount} tâche
-								{totalCount > 1 ? 's' : ''} terminée
-								{doneCount > 1 ? 's' : ''}
-							</p>
-						</CardContent>
-					</Card>
+					{/* Bandeau KPI — Avancement + Budget (Fichiers : M4) */}
+					<div className="grid gap-4 sm:grid-cols-2">
+						<Card>
+							<CardHeader className="pb-2">
+								<CardDescription>Avancement</CardDescription>
+								<CardTitle className="text-2xl">
+									{pct}%
+								</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<Progress value={pct} />
+								<p className="mt-2 text-sm text-muted-foreground">
+									{doneCount} / {totalCount} tâche
+									{totalCount > 1 ? 's' : ''} terminée
+									{doneCount > 1 ? 's' : ''}
+								</p>
+							</CardContent>
+						</Card>
+						<Card>
+							<CardHeader className="pb-2">
+								<CardDescription>Budget</CardDescription>
+								<CardTitle className="text-2xl">
+									{formatEuro(spent)}
+								</CardTitle>
+							</CardHeader>
+							<CardContent>
+								{budgetValue != null && remaining != null ? (
+									<p className="text-sm text-muted-foreground">
+										sur {formatEuro(budgetValue)} · reste{' '}
+										<span
+											className={
+												remaining < 0
+													? 'font-medium text-destructive'
+													: 'font-medium text-green-600'
+											}
+										>
+											{formatEuro(remaining)}
+										</span>
+									</p>
+								) : (
+									<p className="text-sm text-muted-foreground">
+										Aucun budget défini
+									</p>
+								)}
+							</CardContent>
+						</Card>
+					</div>
 
 					<Tabs defaultValue="tasks">
 						<TabsList>
 							<TabsTrigger value="tasks">Tâches</TabsTrigger>
+							<TabsTrigger value="budget">Budget</TabsTrigger>
 							<TabsTrigger value="infos">Infos</TabsTrigger>
 						</TabsList>
 						<TabsContent value="tasks" className="pt-4">
 							<ProjectTasks projectId={project.id} />
+						</TabsContent>
+						<TabsContent value="budget" className="pt-4">
+							<ProjectBudget
+								projectId={project.id}
+								budget={project.budget}
+							/>
 						</TabsContent>
 						<TabsContent value="infos" className="pt-4">
 							<Card>

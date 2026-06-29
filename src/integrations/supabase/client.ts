@@ -220,7 +220,7 @@ export const getProject = async (id: string) => {
  * @throws {Error} Si une erreur survient
  */
 export const createProject = async (
-	project: Omit<Project, 'id' | 'created_at' | 'updated_at' | 'status'>
+	project: Omit<Project, 'id' | 'created_at' | 'updated_at' | 'status' | 'budget'>
 ) => {
 	const { data, error } = await supabase
 		.from('projects')
@@ -321,6 +321,55 @@ export const setProjectTaskDone = async (id: string, isDone: boolean) => {
 export const deleteProjectTask = async (id: string) => {
 	const { error } = await supabase
 		.from('project_tasks')
+		.delete()
+		.eq('id', id);
+
+	if (error) throw error;
+};
+
+/**
+ * Récupère les dépenses d'un projet (plus récentes d'abord)
+ * @throws {Error} Si une erreur survient
+ */
+export const getProjectExpenses = async (projectId: string) => {
+	const { data, error } = await supabase
+		.from('project_expenses')
+		.select('*')
+		.eq('project_id', projectId)
+		.order('spent_at', { ascending: false })
+		.order('created_at', { ascending: false });
+
+	if (error) throw error;
+
+	return data || [];
+};
+
+/**
+ * Crée une dépense dans un projet
+ * @throws {Error} Si une erreur survient
+ */
+export const createProjectExpense = async (
+	projectId: string,
+	expense: { label: string; amount: number; spent_at?: string }
+) => {
+	const { data, error } = await supabase
+		.from('project_expenses')
+		.insert([{ project_id: projectId, ...expense }])
+		.select()
+		.single();
+
+	if (error) throw error;
+
+	return data;
+};
+
+/**
+ * Supprime une dépense
+ * @throws {Error} Si une erreur survient
+ */
+export const deleteProjectExpense = async (id: string) => {
+	const { error } = await supabase
+		.from('project_expenses')
 		.delete()
 		.eq('id', id);
 
