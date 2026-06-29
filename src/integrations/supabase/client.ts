@@ -518,3 +518,23 @@ export const leaveHousehold = async () => {
 	const { error } = await supabase.rpc('leave_household');
 	if (error) throw error;
 };
+
+/**
+ * Dashboard — agrégats sur les données accessibles (la RLS fait le filtrage).
+ */
+export const getAllProjects = async () => {
+	const { data, error } = await supabase
+		.from('projects')
+		.select('id, property_id, name, status')
+		.order('created_at', { ascending: false });
+	if (error) throw error;
+	return data || [];
+};
+
+export const getAllExpenses = async () => {
+	const { data, error } = await supabase
+		.from('project_expenses')
+		.select('amount');
+	if (error) throw error;
+	return data || [];
+};
