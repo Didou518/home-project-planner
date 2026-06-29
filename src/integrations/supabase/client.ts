@@ -5,6 +5,8 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Property } from '@/types/Property';
 import type { Project } from '@/types/Project';
+import type { ProjectFileKind } from '@/types/ProjectFile';
+import { compressImage } from '@/lib/imageCompression';
 import { QueryClient } from '@tanstack/react-query';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -372,6 +374,119 @@ export const deleteProjectExpense = async (id: string) => {
 		.from('project_expenses')
 		.delete()
 		.eq('id', id);
+
+	if (error) throw error;
+};
+
+/**
+ * Fichiers de projet (photos / devis) — octets dans Storage, métadonnées en table.
+ */
+const FILES_BUCKET = 'project-files';
+
+const slugifyFileName = (name: string) =>
+	name.replace(/[^a-zA-Z0-9._-]/g, '_');
+
+/**
+ * Récupère les fichiers d'un projet (métadonnées, plus récents d'abord)
+ * @throws {Error} Si une erreur survient
+ */
+export const getProjectFiles = async (projectId: string) => {
+	const { data, error } = await supabase
+		.from('project_files')
+		.select('*')
+		.eq('project_id', projectId)
+		.order('created_at', { ascending: false });
+
+	if (error) throw error;
+
+	return data || [];
+};
+
+/**
+ * Upload un fichier (compresse les images) puis enregistre ses métadonnées.
+ * Rollback de l'objet Storage si l'insertion des métadonnées échoue.
+ * @throws {Error} Si une erreur survient
+ */
+export const uploadProjectFile = async ({
+	projectId,
+	expenseId,
+	kind,
+	file,
+}: {
+	projectId: string;
+	expenseId?: string | null;
+	kind: ProjectFileKind;
+	file: File;
+}) => {
+	const isImage = file.type.startsWith('image/');
+	const body = isImage ? await compressImage(file) : file;
+
+	const folder =
+		kind === 'devis' && expenseId
+			? `${projectId}/expenses/${expenseId}`
+			: `${projectId}/photos`;
+	const path = `${folder}/${crypto.randomUUID()}-${slugifyFileName(file.name)}`;
+
+	const { error: uploadError } = await supabase.storage
+		.from(FILES_BUCKET)
+		.upload(path, body, {
+			contentType: isImage ? 'image/jpeg' : file.type || undefined,
+			upsert: false,
+		});
+
+	if (uploadError) throw uploadError;
+
+	const { data, error } = await supabase
+		.from('project_files')
+		.insert([
+			{
+				project_id: projectId,
+				expense_id: expenseId ?? null,
+				kind,
+				path,
+				name: file.name,
+			},
+		])
+		.select()
+		.single();
+
+	if (error) {
+		await supabase.storage.from(FILES_BUCKET).remove([path]);
+		throw error;
+	}
+
+	return data;
+};
+
+/**
+ * URL signée temporaire (1h) pour afficher/télécharger un fichier privé
+ * @throws {Error} Si une erreur survient
+ */
+export const getProjectFileUrl = async (path: string) => {
+	const { data, error } = await supabase.storage
+		.from(FILES_BUCKET)
+		.createSignedUrl(path, 3600);
+
+	if (error) throw error;
+
+	return data.signedUrl;
+};
+
+/**
+ * Supprime un fichier (objet Storage + métadonnées)
+ * @throws {Error} Si une erreur survient
+ */
+export const deleteProjectFile = async (file: { id: string; path: string }) => {
+	const { error: removeError } = await supabase.storage
+		.from(FILES_BUCKET)
+		.remove([file.path]);
+
+	if (removeError) throw removeError;
+
+	const { error } = await supabase
+		.from('project_files')
+		.delete()
+		.eq('id', file.id);
 
 	if (error) throw error;
 };

@@ -1,17 +1,92 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
 	useProjectExpenses,
 	useProjectExpenseMutations,
 } from '@/hooks/useProjectExpenses';
+import {
+	useProjectFiles,
+	useProjectFileMutations,
+} from '@/hooks/useProjectFiles';
 import type { ProjectExpense } from '@/types/ProjectExpense';
-import { updateProject, queryClient } from '@/integrations/supabase/client';
+import type { ProjectFile } from '@/types/ProjectFile';
+import {
+	updateProject,
+	queryClient,
+	getProjectFileUrl,
+} from '@/integrations/supabase/client';
 import { useMutation } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { formatEuro } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Trash2, Plus, Loader2 } from 'lucide-react';
+import { Trash2, Plus, Loader2, Paperclip } from 'lucide-react';
+
+/** Pièce jointe « devis » d'une dépense (upload / ouvrir / supprimer). */
+function ExpenseDevis({
+	file,
+	onUpload,
+	onDelete,
+}: {
+	file?: ProjectFile;
+	onUpload: (f: File) => void;
+	onDelete: (f: ProjectFile) => void;
+}) {
+	const ref = useRef<HTMLInputElement>(null);
+
+	const openDevis = async () => {
+		if (!file) return;
+		const url = await getProjectFileUrl(file.path);
+		window.open(url, '_blank', 'noopener');
+	};
+
+	return (
+		<span className="flex items-center">
+			<input
+				ref={ref}
+				type="file"
+				accept="image/*,application/pdf"
+				className="hidden"
+				onChange={(e) => {
+					const f = e.target.files?.[0];
+					if (f) onUpload(f);
+					e.target.value = '';
+				}}
+			/>
+			{file ? (
+				<>
+					<Button
+						variant="ghost"
+						size="sm"
+						className="h-7 gap-1 px-2"
+						onClick={openDevis}
+						title={file.name}
+					>
+						<Paperclip className="h-3.5 w-3.5" /> devis
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon"
+						className="h-7 w-7"
+						onClick={() => onDelete(file)}
+						aria-label="Supprimer le devis"
+					>
+						<Trash2 className="h-4 w-4" />
+					</Button>
+				</>
+			) : (
+				<Button
+					variant="ghost"
+					size="sm"
+					className="h-7 gap-1 px-2 text-muted-foreground"
+					onClick={() => ref.current?.click()}
+				>
+					<Paperclip className="h-3.5 w-3.5" /> devis
+				</Button>
+			)}
+		</span>
+	);
+}
 
 export default function ProjectBudget({
 	projectId,
@@ -29,6 +104,16 @@ export default function ProjectBudget({
 	const expenses = (data ?? []) as ProjectExpense[];
 	const spent = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
 	const remaining = budgetValue != null ? budgetValue - spent : null;
+
+	// Devis rattachés aux dépenses (kind='devis'), indexés par dépense.
+	const { data: filesData } = useProjectFiles(projectId);
+	const { uploadFile, deleteFile } = useProjectFileMutations(projectId);
+	const devisByExpense = new Map<string, ProjectFile>();
+	((filesData ?? []) as ProjectFile[]).forEach((f) => {
+		if (f.kind === 'devis' && f.expense_id) {
+			devisByExpense.set(f.expense_id, f);
+		}
+	});
 
 	const [budgetInput, setBudgetInput] = useState(
 		budgetValue != null ? String(budgetValue) : ''
@@ -155,6 +240,17 @@ export default function ProjectBudget({
 							<span className="font-medium">
 								{formatEuro(Number(exp.amount))}
 							</span>
+							<ExpenseDevis
+								file={devisByExpense.get(exp.id)}
+								onUpload={(f) =>
+									uploadFile.mutate({
+										kind: 'devis',
+										file: f,
+										expenseId: exp.id,
+									})
+								}
+								onDelete={(f) => deleteFile.mutate(f)}
+							/>
 							<Button
 								variant="ghost"
 								size="icon"

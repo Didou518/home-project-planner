@@ -34,6 +34,7 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import DeleteModal from '@/components/DeleteModal';
 import ProjectBudget from '@/components/project/ProjectBudget';
+import ProjectPhotos from '@/components/project/ProjectPhotos';
 import { useProjectExpenses } from '@/hooks/useProjectExpenses';
 import { formatEuro } from '@/lib/utils';
 import type { ProjectStatus } from '@/types/Project';
@@ -255,6 +256,7 @@ export default function ProjectPage() {
 						<TabsList>
 							<TabsTrigger value="tasks">Tâches</TabsTrigger>
 							<TabsTrigger value="budget">Budget</TabsTrigger>
+							<TabsTrigger value="files">Fichiers</TabsTrigger>
 							<TabsTrigger value="infos">Infos</TabsTrigger>
 						</TabsList>
 						<TabsContent value="tasks" className="pt-4">
@@ -265,6 +267,9 @@ export default function ProjectPage() {
 								projectId={project.id}
 								budget={project.budget}
 							/>
+						</TabsContent>
+						<TabsContent value="files" className="pt-4">
+							<ProjectPhotos projectId={project.id} />
 						</TabsContent>
 						<TabsContent value="infos" className="pt-4">
 							<Card>
