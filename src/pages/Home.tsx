@@ -1,24 +1,130 @@
+import type { ReactNode } from 'react';
 import PageTemplate from '@/components/PageTemplate';
-import styles from './Home.module.css';
-import Breadcrumbs from '@/components/Breadcrumbs';
-import { type Crumb } from '@/components/Breadcrumbs';
+import Breadcrumbs, { type Crumb } from '@/components/Breadcrumbs';
 import Heading1 from '@/components/Heading1';
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { NavLink } from 'react-router';
+import {
+	Home as HomeIcon,
+	FolderKanban,
+	Wallet,
+	ArrowRight,
+} from 'lucide-react';
+import { useDashboard } from '@/hooks/useDashboard';
+import { formatEuro } from '@/lib/utils';
 
 const breadcrumbs: Crumb[] = [{ label: 'Accueil', to: '/' }];
 
+function KpiCard({
+	icon,
+	label,
+	value,
+}: {
+	icon: ReactNode;
+	label: string;
+	value: string;
+}) {
+	return (
+		<Card>
+			<CardHeader className="pb-2">
+				<div className="flex items-center gap-2 text-muted-foreground">
+					{icon}
+					<CardDescription>{label}</CardDescription>
+				</div>
+				<CardTitle className="text-2xl">{value}</CardTitle>
+			</CardHeader>
+		</Card>
+	);
+}
+
 export default function HomePage() {
+	const { isLoading, error, biensCount, inProgress, totalSpent } =
+		useDashboard();
+
+	const v = (value: string) => (isLoading ? '…' : value);
+
 	return (
 		<>
 			<Breadcrumbs crumbs={breadcrumbs} />
 			<PageTemplate>
-				<section className={styles.home}>
-					<Heading1>Home Project Planner</Heading1>
-					<p className="text-muted-foreground">
-						Suivez l'avancement et le budget des projets de vos
-						biens. Sélectionnez un bien dans le menu, ou créez-en un
-						pour commencer.
-					</p>
-				</section>
+				<div className="flex flex-col gap-6">
+					<Heading1>Tableau de bord</Heading1>
+
+					{error ? (
+						<p className="text-destructive">
+							Impossible de charger le tableau de bord.
+						</p>
+					) : (
+						<>
+							<div className="grid gap-4 sm:grid-cols-3">
+								<KpiCard
+									icon={<HomeIcon className="h-4 w-4" />}
+									label="Biens"
+									value={v(String(biensCount))}
+								/>
+								<KpiCard
+									icon={<FolderKanban className="h-4 w-4" />}
+									label="Projets en cours"
+									value={v(String(inProgress.length))}
+								/>
+								<KpiCard
+									icon={<Wallet className="h-4 w-4" />}
+									label="Total dépensé"
+									value={v(formatEuro(totalSpent))}
+								/>
+							</div>
+
+							<Card>
+								<CardHeader>
+									<CardTitle>Projets en cours</CardTitle>
+									<CardDescription>
+										Les projets actuellement « en cours »
+										sur tous vos biens.
+									</CardDescription>
+								</CardHeader>
+								<CardContent>
+									{isLoading ? (
+										<p className="text-sm text-muted-foreground">
+											Chargement…
+										</p>
+									) : inProgress.length > 0 ? (
+										<ul className="divide-y">
+											{inProgress.map((p) => (
+												<li key={p.id}>
+													<NavLink
+														to={`/properties/${p.property_id}/projects/${p.id}`}
+														className="flex items-center justify-between py-2 text-sm hover:underline"
+													>
+														<span>{p.name}</span>
+														<ArrowRight className="h-4 w-4 text-muted-foreground" />
+													</NavLink>
+												</li>
+											))}
+										</ul>
+									) : (
+										<p className="text-sm text-muted-foreground">
+											Aucun projet en cours.
+										</p>
+									)}
+								</CardContent>
+							</Card>
+
+							<NavLink to="/properties">
+								<Button variant="outline">
+									Voir mes biens
+									<ArrowRight className="ml-2 h-4 w-4" />
+								</Button>
+							</NavLink>
+						</>
+					)}
+				</div>
 			</PageTemplate>
 		</>
 	);
