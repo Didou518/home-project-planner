@@ -17,7 +17,8 @@ type Crumb = {
 export default function Breadcrumbs({ crumbs }: { crumbs: Crumb[] }) {
 	return (
 		<div className="flex items-center gap-2 p-2">
-			<SidebarTrigger />
+			{/* Cible tactile ≥ 44px sur mobile (norme iOS HIG) ; compacte en desktop. */}
+			<SidebarTrigger className="size-11 [&_svg]:size-5 sm:size-7 sm:[&_svg]:size-4" />
 			<Breadcrumb>
 				<BreadcrumbList>
 					{crumbs.map((crumb, index) => {
