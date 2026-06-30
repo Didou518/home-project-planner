@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Form, NavLink, useLocation } from 'react-router';
 import {
 	Sidebar,
@@ -10,6 +11,7 @@ import {
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
+	useSidebar,
 } from '../ui/sidebar';
 import { Button } from '../ui/button';
 import { LayoutDashboard, LogOut, Users } from 'lucide-react';
@@ -32,6 +34,13 @@ const menuItems = [
 
 export default function AppSidebar() {
 	const location = useLocation();
+	const { isMobile, setOpenMobile } = useSidebar();
+
+	// Sur mobile, la sidebar est un drawer (Sheet) : on le referme à chaque
+	// navigation, sinon il reste ouvert et on ne voit pas que la page a changé.
+	useEffect(() => {
+		if (isMobile) setOpenMobile(false);
+	}, [location.pathname, isMobile, setOpenMobile]);
 
 	const { data: properties, isLoading: isPropertiesLoading } =
 		useProperties();
