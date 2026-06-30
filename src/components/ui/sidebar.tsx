@@ -273,7 +273,9 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <PanelLeftIcon />
+      {/* size directe sur le svg : le Button n'applique sa taille par défaut
+          qu'aux svg sans classe size-* → ici size-6 (24px) en mobile, 16px en desktop */}
+      <PanelLeftIcon className="size-6 sm:size-4" />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )

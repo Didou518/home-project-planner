@@ -120,25 +120,7 @@ export default function PropertyPage() {
 
 					<Card>
 						<CardHeader>
-							<CardTitle>Informations du bien</CardTitle>
-							<CardDescription>
-								Détails et métadonnées du bien
-							</CardDescription>
-						</CardHeader>
-						<CardContent className="space-y-4">
-							<div className="flex items-center gap-2 text-sm">
-								<Calendar className="h-4 w-4 text-muted-foreground" />
-								<span className="text-muted-foreground">
-									Créé le :
-								</span>
-								<span>{formatDate(property.created_at)}</span>
-							</div>
-						</CardContent>
-					</Card>
-
-					<Card>
-						<CardHeader>
-							<div className="flex items-center justify-between">
+							<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 								<div>
 									<CardTitle>Projets</CardTitle>
 									<CardDescription>
@@ -147,8 +129,9 @@ export default function PropertyPage() {
 								</div>
 								<NavLink
 									to={`/properties/${property.id}/projects/new`}
+									className="w-full sm:w-auto"
 								>
-									<Button size="sm">
+									<Button size="sm" className="w-full sm:w-auto">
 										<Plus className="mr-2 h-4 w-4" />
 										Ajouter un projet
 									</Button>
@@ -196,6 +179,24 @@ export default function PropertyPage() {
 									</p>
 								</div>
 							)}
+						</CardContent>
+					</Card>
+
+					<Card>
+						<CardHeader>
+							<CardTitle>Informations du bien</CardTitle>
+							<CardDescription>
+								Détails et métadonnées du bien
+							</CardDescription>
+						</CardHeader>
+						<CardContent className="space-y-4">
+							<div className="flex items-center gap-2 text-sm">
+								<Calendar className="h-4 w-4 text-muted-foreground" />
+								<span className="text-muted-foreground">
+									Créé le :
+								</span>
+								<span>{formatDate(property.created_at)}</span>
+							</div>
 						</CardContent>
 					</Card>
 				</div>
