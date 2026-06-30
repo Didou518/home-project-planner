@@ -151,12 +151,12 @@ export default function ProjectPage() {
 		<>
 			<Breadcrumbs crumbs={breadcrumbs} />
 			<PageTemplate>
-				<div className="flex flex-col gap-6">
+				<div className="flex flex-col gap-4 sm:gap-6">
 					<div className="flex flex-wrap items-start justify-between gap-4">
 						<div className="space-y-2">
 							<Heading1>{project.name}</Heading1>
 							{project.description && (
-								<p className="text-muted-foreground">
+								<p className="line-clamp-2 text-muted-foreground sm:line-clamp-none">
 									{project.description}
 								</p>
 							)}
@@ -210,11 +210,12 @@ export default function ProjectPage() {
 					</div>
 
 					{/* Bandeau KPI — Avancement + Budget (Fichiers : M4) */}
-					<div className="grid gap-4 sm:grid-cols-2">
+					{/* 2 colonnes dès le mobile pour ne pas pousser les onglets trop bas. */}
+					<div className="grid grid-cols-2 gap-3 sm:gap-4">
 						<Card className="gap-2 py-4">
 							<CardHeader className="pb-2">
 								<CardDescription>Avancement</CardDescription>
-								<CardTitle className="text-2xl">
+								<CardTitle className="text-xl sm:text-2xl">
 									{pct}%
 								</CardTitle>
 							</CardHeader>
@@ -230,7 +231,7 @@ export default function ProjectPage() {
 						<Card className="gap-2 py-4">
 							<CardHeader className="pb-2">
 								<CardDescription>Budget</CardDescription>
-								<CardTitle className="text-2xl">
+								<CardTitle className="text-xl sm:text-2xl">
 									{formatEuro(spent)}
 								</CardTitle>
 							</CardHeader>
