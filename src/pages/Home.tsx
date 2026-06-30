@@ -9,7 +9,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { NavLink } from 'react-router';
 import {
 	Home as HomeIcon,
@@ -26,13 +25,17 @@ function KpiCard({
 	icon,
 	label,
 	value,
+	to,
 }: {
 	icon: ReactNode;
 	label: string;
 	value: string;
+	to?: string;
 }) {
-	return (
-		<Card className="py-4">
+	const card = (
+		<Card
+			className={`h-full py-4 ${to ? 'transition-colors hover:bg-accent' : ''}`}
+		>
 			<CardHeader className="pb-2">
 				<div className="flex items-center gap-2 text-muted-foreground">
 					{icon}
@@ -41,6 +44,14 @@ function KpiCard({
 				<CardTitle className="text-2xl">{value}</CardTitle>
 			</CardHeader>
 		</Card>
+	);
+
+	return to ? (
+		<NavLink to={to} className="block">
+			{card}
+		</NavLink>
+	) : (
+		card
 	);
 }
 
@@ -63,16 +74,18 @@ export default function HomePage() {
 						</p>
 					) : (
 						<>
-							<div className="grid gap-4 sm:grid-cols-3">
+							<div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
 								<KpiCard
 									icon={<HomeIcon className="h-4 w-4" />}
 									label="Biens"
 									value={v(String(biensCount))}
+									to="/properties"
 								/>
 								<KpiCard
 									icon={<FolderKanban className="h-4 w-4" />}
 									label="Projets en cours"
 									value={v(String(inProgress.length))}
+									to="/projects/in-progress"
 								/>
 								<KpiCard
 									icon={<Wallet className="h-4 w-4" />}
@@ -100,10 +113,12 @@ export default function HomePage() {
 												<li key={p.id}>
 													<NavLink
 														to={`/properties/${p.property_id}/projects/${p.id}`}
-														className="flex items-center justify-between py-2 text-sm hover:underline"
+														className="flex items-center justify-between gap-3 py-2 text-sm hover:underline"
 													>
-														<span>{p.name}</span>
-														<ArrowRight className="h-4 w-4 text-muted-foreground" />
+														<span className="min-w-0 truncate">
+															{p.name}
+														</span>
+														<ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
 													</NavLink>
 												</li>
 											))}
@@ -115,13 +130,6 @@ export default function HomePage() {
 									)}
 								</CardContent>
 							</Card>
-
-							<NavLink to="/properties">
-								<Button variant="outline">
-									Voir mes biens
-									<ArrowRight className="ml-2 h-4 w-4" />
-								</Button>
-							</NavLink>
 						</>
 					)}
 				</div>
