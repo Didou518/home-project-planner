@@ -7,6 +7,7 @@ export type Project = {
 	description: string | null;
 	status: ProjectStatus;
 	budget: number | null;
+	priority: number | null;
 	created_at: string;
 	updated_at: string;
 };

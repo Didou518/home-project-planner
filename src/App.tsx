@@ -2,7 +2,7 @@ import { createBrowserRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
 import HomePage from './pages/Home.tsx';
 import HouseholdPage from './pages/Household.tsx';
-import InProgressProjectsPage from './pages/projects/InProgressProjects.tsx';
+import AllProjectsPage from './pages/projects/AllProjects.tsx';
 import RootLayout from './pages/Root.tsx';
 import { action as logoutAction } from './pages/Logout.tsx';
 import { AuthProvider } from './components/AuthProvider.tsx';
@@ -50,8 +50,8 @@ const router = createBrowserRouter([
 				element: <HouseholdPage />,
 			},
 			{
-				path: 'projects/in-progress',
-				element: <InProgressProjectsPage />,
+				path: 'projects',
+				element: <AllProjectsPage />,
 			},
 			{
 				path: 'properties',

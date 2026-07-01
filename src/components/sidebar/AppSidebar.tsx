@@ -14,7 +14,7 @@ import {
 	useSidebar,
 } from '../ui/sidebar';
 import { Button } from '../ui/button';
-import { LayoutDashboard, LogOut, Users } from 'lucide-react';
+import { LayoutDashboard, LogOut, Users, FolderKanban } from 'lucide-react';
 import PropertyMenu from './PropertyMenu';
 import ProjectMenu from './ProjectMenu';
 import { useProperties } from '@/hooks/useProperties';
@@ -24,6 +24,11 @@ const menuItems = [
 		label: 'Dashboard',
 		icon: LayoutDashboard,
 		to: '/',
+	},
+	{
+		label: 'Tous les projets',
+		icon: FolderKanban,
+		to: '/projects',
 	},
 	{
 		label: 'Foyer',

@@ -56,7 +56,7 @@ function KpiCard({
 }
 
 export default function HomePage() {
-	const { isLoading, error, biensCount, inProgress, totalSpent } =
+	const { isLoading, error, biensCount, projectsCount, inProgress, totalSpent } =
 		useDashboard();
 
 	const v = (value: string) => (isLoading ? '…' : value);
@@ -83,9 +83,9 @@ export default function HomePage() {
 								/>
 								<KpiCard
 									icon={<FolderKanban className="h-4 w-4" />}
-									label="Projets en cours"
-									value={v(String(inProgress.length))}
-									to="/projects/in-progress"
+									label="Tous les projets"
+									value={v(String(projectsCount))}
+									to="/projects"
 								/>
 								<KpiCard
 									icon={<Wallet className="h-4 w-4" />}
