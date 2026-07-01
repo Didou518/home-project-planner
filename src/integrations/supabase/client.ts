@@ -235,7 +235,10 @@ export const getProject = async (id: string) => {
  * @throws {Error} Si une erreur survient
  */
 export const createProject = async (
-	project: Omit<Project, 'id' | 'created_at' | 'updated_at' | 'status' | 'budget'>
+	project: Omit<
+		Project,
+		'id' | 'created_at' | 'updated_at' | 'status' | 'budget' | 'priority'
+	>
 ) => {
 	const { data, error } = await supabase
 		.from('projects')
@@ -537,10 +540,24 @@ export const leaveHousehold = async () => {
 export const getAllProjects = async () => {
 	const { data, error } = await supabase
 		.from('projects')
-		.select('id, property_id, name, status')
-		.order('created_at', { ascending: false });
+		.select('id, property_id, name, status, priority')
+		// Ordre de priorité manuel (cf. reorderProjects) ; les projets non
+		// encore priorisés (priority NULL) finissent en bas, par date.
+		.order('priority', { ascending: true, nullsFirst: false })
+		.order('created_at', { ascending: true });
 	if (error) throw error;
 	return data || [];
+};
+
+/**
+ * Réordonne les projets (priorisation manuelle, drag&drop). `ids` est la
+ * liste complète des projets dans le nouvel ordre voulu ; la RPC affecte
+ * priority = position dans le tableau, de façon atomique et scoppée par RLS.
+ * @throws {Error} Si une erreur survient
+ */
+export const reorderProjects = async (ids: string[]) => {
+	const { error } = await supabase.rpc('reorder_projects', { p_ids: ids });
+	if (error) throw error;
 };
 
 export const getAllExpenses = async () => {
